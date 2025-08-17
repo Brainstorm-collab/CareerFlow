@@ -99,9 +99,7 @@ careerflow/
 └── supabase/         # Database setup scripts
 ```
 
-## 🌐 Live Demo
 
-Visit our live demo: [CareerFlow Demo](https://your-demo-url.com)
 
 ## 🤝 Contributing
 
@@ -114,9 +112,7 @@ We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
@@ -127,7 +123,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Contact
 
-- **Project Link**: [https://github.com/yourusername/careerflow](https://github.com/yourusername/careerflow)
+- **Project Link**: [https://github.com/yourusername/careerflow](https://github.com/Brainstorm-collab/CareerFlow.git)
 - **Issues**: [GitHub Issues](https://github.com/yourusername/careerflow/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/yourusername/careerflow/discussions)
 
