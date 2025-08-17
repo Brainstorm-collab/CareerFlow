@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Logo Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .logo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .logo-item {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: #333;
+        }
+        .logo-item img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            margin-bottom: 10px;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        .status {
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .info { color: #2196F3; }
+    </style>
+</head>
+<body>
+    <h1>Company Logo Test</h1>
+    
+    <div class="test-section">
+        <h2>Default Company Logos</h2>
+        <p>Testing if the default company logos are loading correctly from the public/companies folder.</p>
+        
+        <div class="logo-grid" id="defaultLogos">
+            <!-- Default logos will be loaded here -->
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Logo Mapping Test</h2>
+        <p>Testing the logo mapping logic with different company names.</p>
+        
+        <div class="logo-grid" id="mappingTest">
+            <!-- Mapping test results will be shown here -->
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Console Output</h2>
+        <div id="consoleOutput" style="background: #333; padding: 15px; border-radius: 5px; font-family: monospace; white-space: pre-wrap;">
+            Check browser console for detailed logs
+        </div>
+    </div>
+
+    <script>
+        // Company logo mapping (same as in JobCard component)
+        const logoMap = {
+            'google': '/companies/google.webp',
+            'microsoft': '/companies/microsoft.webp',
+            'amazon': '/companies/amazon.svg',
+            'meta': '/companies/meta.svg',
+            'netflix': '/companies/netflix.png',
+            'uber': '/companies/uber.svg',
+            'atlassian': '/companies/atlassian.svg',
+            'ibm': '/companies/ibm.svg',
+            'apple': '/companies/apple.svg',
+        };
+
+        // Test image loading
+        function testImage(src, alt) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve({ success: true, src, alt });
+                img.onerror = () => resolve({ success: false, src, alt });
+                img.src = src;
+            });
+        }
+
+        // Test default logos
+        async function testDefaultLogos() {
+            const container = document.getElementById('defaultLogos');
+            const companies = [
+                { name: 'Google', path: '/companies/google.webp' },
+                { name: 'Microsoft', path: '/companies/microsoft.webp' },
+                { name: 'Amazon', path: '/companies/amazon.svg' },
+                { name: 'Meta', path: '/companies/meta.svg' },
+                { name: 'Netflix', path: '/companies/netflix.png' },
+                { name: 'Uber', path: '/companies/uber.svg' },
+                { name: 'Atlassian', path: '/companies/atlassian.svg' },
+                { name: 'IBM', path: '/companies/ibm.svg' },
+                { name: 'Apple', path: '/companies/apple.svg' },
+                { name: 'Default', path: '/companies/default.svg' }
+            ];
+
+            for (const company of companies) {
+                const result = await testImage(company.path, company.name);
+                
+                const item = document.createElement('div');
+                item.className = 'logo-item';
+                
+                const img = document.createElement('img');
+                img.src = company.path;
+                img.alt = company.name;
+                
+                const title = document.createElement('div');
+                title.textContent = company.name;
+                title.style.fontWeight = 'bold';
+                title.style.marginBottom = '5px';
+                
+                const status = document.createElement('div');
+                status.className = `status ${result.success ? 'success' : 'error'}`;
+                status.textContent = result.success ? '✅ Loaded' : '❌ Failed';
+                
+                item.appendChild(img);
+                item.appendChild(title);
+                item.appendChild(status);
+                
+                container.appendChild(item);
+            }
+        }
+
+        // Test logo mapping logic
+        function testLogoMapping() {
+            const container = document.getElementById('mappingTest');
+            const testCases = [
+                { input: 'Google', expected: '/companies/google.webp' },
+                { input: 'google', expected: '/companies/google.webp' },
+                { input: 'GOOGLE', expected: '/companies/google.webp' },
+                { input: 'Microsoft', expected: '/companies/microsoft.webp' },
+                { input: 'Amazon', expected: '/companies/amazon.svg' },
+                { input: 'Unknown Company', expected: '/companies/default.svg' },
+                { input: '', expected: '/companies/default.svg' },
+                { input: null, expected: '/companies/default.svg' }
+            ];
+
+            testCases.forEach(testCase => {
+                const item = document.createElement('div');
+                item.className = 'logo-item';
+                
+                // Simulate the getCompanyLogo logic
+                let companyName = '';
+                if (typeof testCase.input === 'string') {
+                    companyName = testCase.input.toLowerCase().trim();
+                }
+                
+                const logoPath = logoMap[companyName] || '/companies/default.svg';
+                const isCorrect = logoPath === testCase.expected;
+                
+                const title = document.createElement('div');
+                title.textContent = `Input: "${testCase.input}"`;
+                title.style.fontWeight = 'bold';
+                title.style.marginBottom = '5px';
+                
+                const result = document.createElement('div');
+                result.textContent = `Output: ${logoPath}`;
+                result.style.fontSize = '12px';
+                result.style.marginBottom = '5px';
+                
+                const status = document.createElement('div');
+                status.className = `status ${isCorrect ? 'success' : 'error'}`;
+                status.textContent = isCorrect ? '✅ Correct' : '❌ Incorrect';
+                
+                item.appendChild(title);
+                item.appendChild(result);
+                item.appendChild(status);
+                
+                container.appendChild(item);
+            });
+        }
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            console.log('Company Logo Test Page Loaded');
+            console.log('Testing default logos...');
+            await testDefaultLogos();
+            console.log('Testing logo mapping logic...');
+            testLogoMapping();
+            console.log('Tests completed!');
+        });
+    </script>
+</body>
+</html>

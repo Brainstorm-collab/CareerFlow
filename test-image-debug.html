@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Debug Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        .debug-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #2a2a2a;
+        }
+        .job-data {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .image-test {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .image-test img {
+            width: 100px;
+            height: 100px;
+            border: 2px solid #555;
+            border-radius: 8px;
+            margin: 10px;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .success { background: #2d5a2d; color: #90ee90; }
+        .error { background: #5a2d2d; color: #ffb6c1; }
+        .info { background: #2d2d5a; color: #add8e6; }
+    </style>
+</head>
+<body>
+    <h1>Image Debug Test</h1>
+    
+    <div class="debug-section">
+        <h2>Local Storage Data</h2>
+        <div id="storageData" class="job-data">
+            Loading...
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Image Loading Test</h2>
+        <div id="imageTest" class="image-test">
+            Testing images...
+        </div>
+    </div>
+
+    <div class="debug-section">
+        <h2>Console Output</h2>
+        <div id="consoleOutput" class="job-data">
+            Check browser console for detailed logs
+        </div>
+    </div>
+
+    <script>
+        // Test image loading
+        function testImage(src, alt) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.onload = () => resolve({ success: true, src, alt });
+                img.onerror = () => resolve({ success: false, src, alt });
+                img.src = src;
+            });
+        }
+
+        // Display local storage data
+        function displayStorageData() {
+            const storageData = document.getElementById('storageData');
+            const data = {};
+            
+            // Get all careerflow related data
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('careerflow_')) {
+                    try {
+                        data[key] = JSON.parse(localStorage.getItem(key));
+                    } catch (e) {
+                        data[key] = localStorage.getItem(key);
+                    }
+                }
+            }
+            
+            storageData.textContent = JSON.stringify(data, null, 2);
+        }
+
+        // Test all company logos
+        async function testAllLogos() {
+            const imageTest = document.getElementById('imageTest');
+            const companies = [
+                { name: 'Google', path: '/companies/google.webp' },
+                { name: 'Microsoft', path: '/companies/microsoft.webp' },
+                { name: 'Amazon', path: '/companies/amazon.svg' },
+                { name: 'Meta', path: '/companies/meta.svg' },
+                { name: 'Netflix', path: '/companies/netflix.png' },
+                { name: 'Uber', path: '/companies/uber.svg' },
+                { name: 'Atlassian', path: '/companies/atlassian.svg' },
+                { name: 'IBM', path: '/companies/ibm.svg' },
+                { name: 'Apple', path: '/companies/apple.svg' },
+                { name: 'Default', path: '/companies/default.svg' }
+            ];
+
+            imageTest.innerHTML = '<h3>Testing Company Logos</h3>';
+            
+            for (const company of companies) {
+                const result = await testImage(company.path, company.name);
+                
+                const statusClass = result.success ? 'success' : 'error';
+                const statusText = result.success ? '✅ Loaded' : '❌ Failed';
+                
+                const div = document.createElement('div');
+                div.className = `status ${statusClass}`;
+                div.innerHTML = `
+                    <strong>${company.name}:</strong> ${statusText}<br>
+                    <small>Path: ${company.path}</small>
+                `;
+                
+                imageTest.appendChild(div);
+            }
+        }
+
+        // Test custom logos from posted jobs
+        async function testCustomLogos() {
+            const imageTest = document.getElementById('imageTest');
+            const postedJobs = localStorage.getItem('careerflow_posted_jobs');
+            
+            if (postedJobs) {
+                try {
+                    const jobs = JSON.parse(postedJobs);
+                    imageTest.innerHTML += '<h3>Testing Custom Logos from Posted Jobs</h3>';
+                    
+                    for (const job of jobs) {
+                        if (job.company?.logo) {
+                            const result = await testImage(job.company.logo, job.title);
+                            
+                            const statusClass = result.success ? 'success' : 'error';
+                            const statusText = result.success ? '✅ Loaded' : '❌ Failed';
+                            
+                            const div = document.createElement('div');
+                            div.className = `status ${statusClass}`;
+                            div.innerHTML = `
+                                <strong>${job.title}:</strong> ${statusText}<br>
+                                <small>Company: ${job.company.name}</small><br>
+                                <small>Logo: ${job.company.logo.substring(0, 50)}...</small>
+                            `;
+                            
+                            imageTest.appendChild(div);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error testing custom logos:', e);
+                }
+            }
+        }
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            displayStorageData();
+            await testAllLogos();
+            await testCustomLogos();
+        });
+
+        // Add some console logging
+        console.log('Image Debug Test Page Loaded');
+        console.log('Local Storage Keys:', Object.keys(localStorage).filter(key => key.startsWith('careerflow_')));
+    </script>
+</body>
+</html>
