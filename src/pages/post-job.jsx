@@ -355,7 +355,7 @@ const PostJob = () => {
                     id="company"
                     value={formData.company}
                     onChange={(e) => handleInputChange('company', e.target.value)}
-                    placeholder="e.g., RoadsideCoder"
+                    placeholder="e.g., META"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/20 focus:border-blue-500"
                     required
                   />

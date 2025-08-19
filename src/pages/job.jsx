@@ -424,12 +424,15 @@ const JobPage = () => {
                     )}
                     {isJobSavedState ? 'Unsave Job' : 'Save Job'}
                   </Button>
-                  <ApplyJobDrawer
-                    job={job}
-                    user={user}
-                    fetchJob={handleApplicationSubmitted}
-                    applied={hasUserApplied}
-                  />
+                  {/* Only show Apply button for candidates, not recruiters */}
+                  {user?.unsafeMetadata?.role !== 'recruiter' && (
+                    <ApplyJobDrawer
+                      job={job}
+                      user={user}
+                      fetchJob={handleApplicationSubmitted}
+                      applied={hasUserApplied}
+                    />
+                  )}
                 </div>
               </div>
             )}

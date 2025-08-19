@@ -1,4 +1,5 @@
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
+import { useEffect } from "react";
 
 import AppLayout from "./layouts/app-layout";
 import AuthLayout from "./layouts/auth-layout";
@@ -24,7 +25,6 @@ import ContactPage from "./pages/contact";
 import { SignIn, SignUp } from "@clerk/clerk-react";
 
 import "./App.css";
-import { useEffect } from "react";
 
 const router = createBrowserRouter([
   // Auth routes (outside of main app layout)

@@ -48,7 +48,8 @@ const LandingPage = () => {
         experience_level: 'senior',
         remote_work: true,
         salary_min: 120000,
-        salary_max: 180000
+        salary_max: 180000,
+        description: 'Join Google\'s engineering team to build innovative solutions that impact millions of users worldwide.'
       },
       {
         id: 'landing-2',
@@ -59,7 +60,8 @@ const LandingPage = () => {
         experience_level: 'mid',
         remote_work: false,
         salary_min: 80000,
-        salary_max: 120000
+        salary_max: 120000,
+        description: 'Create beautiful and responsive user interfaces for Microsoft\'s next-generation applications.'
       },
       {
         id: 'landing-3',
@@ -68,9 +70,46 @@ const LandingPage = () => {
         location: 'Seattle, WA',
         job_type: 'full-time',
         experience_level: 'mid',
-        remote_work: true,
+        remotework: true,
         salary_min: 100000,
-        salary_max: 150000
+        salary_max: 150000,
+        description: 'Leverage big data to drive business insights and improve customer experience at Amazon.'
+      },
+      {
+        id: 'landing-4',
+        title: 'Product Manager',
+        company: { name: 'Meta' },
+        location: 'Menlo Park, CA',
+        job_type: 'full-time',
+        experience_level: 'senior',
+        remote_work: true,
+        salary_min: 130000,
+        salary_max: 200000,
+        description: 'Lead product strategy and development for Meta\'s social media platforms.'
+      },
+      {
+        id: 'landing-5',
+        title: 'DevOps Engineer',
+        company: { name: 'Netflix' },
+        location: 'Los Gatos, CA',
+        job_type: 'full-time',
+        experience_level: 'mid',
+        remote_work: true,
+        salary_min: 110000,
+        salary_max: 160000,
+        description: 'Build and maintain the infrastructure that powers Netflix\'s global streaming service.'
+      },
+      {
+        id: 'landing-6',
+        title: 'UX Designer',
+        company: { name: 'Apple' },
+        location: 'Cupertino, CA',
+        job_type: 'full-time',
+        experience_level: 'senior',
+        remote_work: false,
+        salary_min: 140000,
+        salary_max: 190000,
+        description: 'Design intuitive and beautiful user experiences for Apple\'s ecosystem of products.'
       }
     ];
     setSampleJobs(jobs);
@@ -170,21 +209,21 @@ const LandingPage = () => {
       
       {/* Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
-        <Link to={"/jobs"}>
+        <Link to={"/jobs"} className="w-full sm:w-auto">
           <Button 
             variant="blue" 
             size="xl"
-            className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/25 transition-all duration-300"
+            className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-blue-500/25 transition-all duration-300 text-base sm:text-lg py-3 sm:py-4"
           >
             <Users size={20} className="mr-2" />
             Find Jobs
           </Button>
         </Link>
-        <Link to={"/post-job"}>
+        <Link to={"/post-job"} className="w-full sm:w-auto">
           <Button 
             variant="destructive" 
             size="xl"
-            className="w-full sm:w-auto bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+            className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg hover:shadow-red-500/25 transition-all duration-300 text-base sm:text-lg py-3 sm:py-4"
           >
             <Building2 size={20} className="mr-2" />
             Post a Job
@@ -207,14 +246,14 @@ const LandingPage = () => {
           ]}
           className="w-full py-4"
         >
-          <CarouselContent className="flex gap-5 sm:gap-20 items-center">
+          <CarouselContent className="flex gap-3 sm:gap-5 lg:gap-20 items-center">
             {companies.map(({ name, id, path }) => (
-              <CarouselItem key={id} className="basis-1/3 lg:basis-1/6">
-                <div className="rounded-lg p-4 hover:scale-105 transition-all duration-300">
+              <CarouselItem key={id} className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/6">
+                <div className="rounded-lg p-2 sm:p-4 hover:scale-105 transition-all duration-300">
                   <img
                     src={path}
                     alt={name}
-                    className="h-24 sm:h-28 lg:h-32 xl:h-36 2xl:h-40 object-contain"
+                    className="h-16 sm:h-20 md:h-24 lg:h-28 xl:h-32 object-contain"
                   />
                 </div>
               </CarouselItem>
@@ -230,16 +269,16 @@ const LandingPage = () => {
       </div>
 
       {/* Features Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 px-4">
         <Card className="bg-gradient-to-br from-black/20 via-black/15 to-black/20 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all duration-300 group">
-          <CardHeader>
-            <CardTitle className="font-bold text-white flex items-center gap-2 group-hover:text-blue-400 transition-colors">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-bold text-white flex items-center gap-2 group-hover:text-blue-400 transition-colors text-lg sm:text-xl">
               <Users size={20} className="text-blue-400" />
               For Job Seekers
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 leading-relaxed">
+          <CardContent className="pt-0">
+            <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
               Search and apply for jobs, track applications, save interesting positions, and more.
             </p>
             <div className="mt-4 flex items-center gap-2 text-blue-400 text-sm font-medium">
@@ -250,14 +289,14 @@ const LandingPage = () => {
         </Card>
         
         <Card className="bg-gradient-to-br from-black/20 via-black/15 to-black/20 backdrop-blur-sm border border-white/10 hover:border-red-500/30 transition-all duration-300 group">
-          <CardHeader>
-            <CardTitle className="font-bold text-white flex items-center gap-2 group-hover:text-red-400 transition-colors">
+          <CardHeader className="pb-3">
+            <CardTitle className="font-bold text-white flex items-center gap-2 group-hover:text-red-400 transition-colors text-lg sm:text-xl">
               <Building2 size={20} className="text-red-400" />
               For Employers
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-gray-300 leading-relaxed">
+          <CardContent className="pt-0">
+            <p className="text-gray-300 leading-relaxed text-sm sm:text-base">
               Post jobs, manage applications, and find the best candidates for your team.
             </p>
             <div className="mt-4 flex items-center gap-2 text-red-400 text-sm font-medium">
@@ -269,24 +308,24 @@ const LandingPage = () => {
       </section>
 
       {/* Sample Jobs Section */}
-      <section className="relative">
+      <section className="relative px-4">
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-purple-500/5 rounded-full blur-3xl"></div>
         </div>
         
-        <div className="text-center mb-4">
-          <h2 className="text-3xl font-bold text-white mb-2">Featured Job Opportunities</h2>
-          <p className="text-gray-400">Discover what's waiting for you</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Featured Job Opportunities</h2>
+          <p className="text-gray-400 text-sm sm:text-base">Discover what's waiting for you</p>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {sampleJobs.map((job) => (
             <Card key={job.id} className="bg-black/70 backdrop-blur-sm border border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 transform hover:-translate-y-1">
-              <CardContent className="p-6">
+              <CardContent className="p-4 sm:p-6">
                 {/* Job Title */}
                 <div className="text-center mb-4">
-                  <h3 className="text-xl font-bold text-white leading-tight">
+                  <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">
                     {job.title}
                   </h3>
                 </div>
@@ -296,20 +335,18 @@ const LandingPage = () => {
                   <img 
                     src={getCompanyLogoPath(job.company.name)} 
                     alt={`${job.company.name} logo`}
-                    className="w-10 h-10 object-contain"
+                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
                     onError={(e) => {
                       e.target.src = '/companies/default.svg';
                     }}
                   />
-                  <span className="text-gray-300 text-sm font-medium">
-                    {job.company.name}
-                  </span>
+                  <span className="text-white font-medium text-sm sm:text-base">{job.company.name}</span>
                 </div>
 
                 {/* Job Description */}
                 <div className="text-center mb-4">
                   <p className="text-gray-300 text-sm leading-relaxed">
-                    {job.company.name} is looking for a skilled {job.title} to join our team.
+                    {job.description}
                   </p>
                 </div>
 
@@ -378,48 +415,49 @@ const LandingPage = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="relative">
+      <section className="relative px-4">
         <div className="absolute inset-0 -z-10">
-          <div className="absolute top-0 left-1/4 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 left-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-1/2 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
         </div>
         
-        <div className="text-center mb-4">
-          <h2 className="text-3xl font-bold text-white mb-2">Frequently Asked Questions</h2>
-          <p className="text-gray-400">Everything you need to know about CARRERFLOW</p>
+        <div className="text-center mb-6 sm:mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Frequently Asked Questions</h2>
+          <p className="text-gray-400 text-sm sm:text-base">Everything you need to know about CareerFlow</p>
         </div>
         
-        <Accordion type="multiple" className="w-full max-w-4xl mx-auto">
-          {faqs.map((faq, index) => (
-            <AccordionItem key={index} value={`item-${index + 1}`} className="border-white/10">
-              <AccordionTrigger className="text-white hover:text-blue-400 text-left">
-                <div className="flex items-center gap-3">
-                  <Star size={16} className="text-blue-400 flex-shrink-0" />
-                  <span>{faq.question}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="text-gray-300 pl-8">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <div className="max-w-4xl mx-auto">
+          <Accordion type="single" collapsible className="space-y-4">
+            {faqs.map((faq, index) => (
+              <AccordionItem key={index} value={`item-${index}`} className="bg-black/30 backdrop-blur-sm border border-white/10 rounded-lg px-4 sm:px-6">
+                <AccordionTrigger className="text-left text-white hover:text-blue-400 transition-colors py-4 sm:py-6">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm sm:text-base">{faq.question}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="text-gray-300 pl-0 sm:pl-8 pb-4 sm:pb-6 text-sm sm:text-base">
+                  {faq.answer}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </div>
       </section>
       
       {/* Footer */}
       <footer className="bg-gradient-to-r from-black/40 via-black/30 to-black/40 backdrop-blur-md border-t border-white/20 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
             {/* Company Info */}
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center gap-3 mb-4">
                 <img 
                   src="/newlogo.png" 
                   alt="CareerFlow Logo" 
-                  className="w-12 h-12 object-contain"
+                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
                 />
                 <div>
-                  <h3 className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                  <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
                     CARRERFLOW
                   </h3>
                   <p className="text-xs text-gray-400">WHERE CAREERS FLOW FORWARD</p>
@@ -432,7 +470,7 @@ const LandingPage = () => {
 
             {/* Quick Links */}
             <div>
-              <h4 className="text-white font-semibold mb-4">Quick Links</h4>
+              <h4 className="text-white font-semibold mb-4 text-base sm:text-lg">Quick Links</h4>
               <ul className="space-y-2">
                 <li>
                   <Link to="/jobs" className="text-gray-300 hover:text-blue-400 transition-colors text-sm">
@@ -459,7 +497,7 @@ const LandingPage = () => {
 
             {/* Contact Info */}
             <div>
-              <h4 className="text-white font-semibold mb-4">Get in Touch</h4>
+              <h4 className="text-white font-semibold mb-4 text-base sm:text-lg">Get in Touch</h4>
               <ul className="space-y-2">
                 <li className="text-gray-300 text-sm">
                   <span className="text-blue-400">📧</span> hello@carrerflow.com
@@ -475,17 +513,12 @@ const LandingPage = () => {
           </div>
 
           {/* Bottom Section */}
-          <div className="border-t border-white/10 mt-8 pt-8">
-                          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <span>© 2025 CareerFlow. All rights reserved.</span>
-                </div>
-                {/* <div className="flex items-center gap-2 text-gray-400 text-sm">
-                  <span>Made with</span>
-                  <span className="text-red-400">💗</span>
-                  <span>by G.Eesaan</span>
-                </div> */}
+          <div className="border-t border-white/10 mt-6 sm:mt-8 pt-6 sm:pt-8">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <span>© 2025 CareerFlow. All rights reserved.</span>
               </div>
+            </div>
           </div>
         </div>
       </footer>

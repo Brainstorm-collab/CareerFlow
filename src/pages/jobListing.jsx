@@ -33,13 +33,19 @@ const JobListing = () => {
   const locations = ["Mumbai, Maharashtra", "Delhi, NCR", "Bangalore, Karnataka", "Hyderabad, Telangana", "Chennai, Tamil Nadu", "Pune, Maharashtra", "Gurgaon, Haryana", "Noida, Uttar Pradesh", "Remote"];
   const companies = ["Google", "Microsoft", "Amazon", "Meta", "Netflix", "Uber", "Atlassian", "IBM"];
 
+  // Initialize filteredJobs with jobs when jobs change
+  useEffect(() => {
+    setFilteredJobs(jobs);
+  }, [jobs]);
+
   useEffect(() => {
     fetchJobs();
     if (user) {
       fetchSavedJobs();
     }
-  }, [user, jobsList]); // Re-run when jobsList changes
+  }, [user]);
 
+  // Filter jobs whenever jobs, search term, or filters change
   useEffect(() => {
     filterJobs();
   }, [jobs, searchTerm, selectedLocation, selectedCompany, selectedJobType, selectedExperience]);
@@ -59,17 +65,18 @@ const JobListing = () => {
       
       // Ensure we have sample jobs even if local storage is empty
       if (!localJobs || localJobs.length === 0) {
+        // Sample fallback jobs if no jobs are found
         const fallbackJobs = [
           {
             id: 'sample_1',
             title: 'Senior Software Engineer',
-            description: 'We are looking for a Senior Software Engineer to join our team and help build scalable web applications. You will work on cutting-edge technologies and collaborate with cross-functional teams.',
+            description: 'We are looking for a Senior Software Engineer to join our team and help build scalable applications. You will work on cutting-edge technologies and collaborate with cross-functional teams.',
             requirements: [
               '5+ years of experience in software development',
               'Strong knowledge of JavaScript, Python, or Java',
-              'Experience with cloud platforms (AWS, GCP, or Azure)',
+              'Experience with cloud platforms (AWS, Azure, GCP)',
               'Knowledge of microservices architecture',
-              'Excellent problem-solving and communication skills'
+              'Bachelor\'s degree in Computer Science or related field'
             ],
             location: 'San Francisco, CA',
             salary_min: 120000,
@@ -83,13 +90,13 @@ const JobListing = () => {
           {
             id: 'sample_2',
             title: 'Frontend Developer',
-            description: 'Join our frontend team to create beautiful and responsive user interfaces. You will work with modern frameworks and ensure excellent user experience across all devices.',
+            description: 'Join our frontend team to create beautiful and responsive user interfaces. You will work with modern frameworks and collaborate with designers to deliver exceptional user experiences.',
             requirements: [
               '3+ years of experience in frontend development',
-              'Proficiency in React, Vue.js, or Angular',
-              'Strong CSS and HTML skills',
+              'Proficiency in React, Vue, or Angular',
+              'Strong CSS and JavaScript skills',
               'Experience with responsive design',
-              'Knowledge of modern JavaScript (ES6+)'
+              'Knowledge of modern build tools'
             ],
             location: 'New York, NY',
             salary_min: 80000,
@@ -118,6 +125,66 @@ const JobListing = () => {
             experience_level: 'mid',
             remote_work: true,
             company: { name: 'Amazon' },
+            isOpen: true
+          },
+          {
+            id: 'sample_4',
+            title: 'Product Manager',
+            description: 'Lead product strategy and development for our platform. You will work closely with engineering, design, and business teams to deliver innovative solutions.',
+            requirements: [
+              '4+ years of product management experience',
+              'Strong analytical and problem-solving skills',
+              'Experience with agile methodologies',
+              'Excellent communication and leadership skills',
+              'Technical background preferred'
+            ],
+            location: 'Menlo Park, CA',
+            salary_min: 130000,
+            salary_max: 200000,
+            job_type: 'full-time',
+            experience_level: 'senior',
+            remote_work: true,
+            company: { name: 'Meta' },
+            isOpen: true
+          },
+          {
+            id: 'sample_5',
+            title: 'DevOps Engineer',
+            description: 'Build and maintain our cloud infrastructure and deployment pipelines. You will ensure high availability and scalability of our systems.',
+            requirements: [
+              '3+ years of DevOps experience',
+              'Experience with AWS, Docker, and Kubernetes',
+              'Knowledge of CI/CD pipelines',
+              'Strong scripting skills (Python, Bash)',
+              'Experience with monitoring and logging tools'
+            ],
+            location: 'Los Gatos, CA',
+            salary_min: 110000,
+            salary_max: 160000,
+            job_type: 'full-time',
+            experience_level: 'mid',
+            remote_work: true,
+            company: { name: 'Netflix' },
+            isOpen: true
+          },
+          {
+            id: 'sample_6',
+            title: 'UX Designer',
+            description: 'Create intuitive and beautiful user experiences for our products. You will conduct user research and design user interfaces that delight our customers.',
+            requirements: [
+              '4+ years of UX design experience',
+              'Proficiency in design tools (Figma, Sketch)',
+              'Experience with user research and testing',
+              'Strong portfolio showcasing design work',
+              'Knowledge of design systems and accessibility'
+            ],
+            location: 'Cupertino, CA',
+            salary_min: 140000,
+            salary_max: 190000,
+            job_type: 'full-time',
+            experience_level: 'senior',
+            remote_work: false,
+            company: { name: 'Apple' },
             isOpen: true
           }
         ];
@@ -272,137 +339,124 @@ const JobListing = () => {
         )}
       </section>
 
-      {/* Search and Filters */}
-      <section className="max-w-6xl mx-auto mb-6">
-        <Card className="bg-gradient-to-br from-gray-900/80 via-gray-800/80 to-gray-900/80 backdrop-blur-sm border-gray-700/50 shadow-2xl">
-          <CardContent className="p-6">
-            {/* Header with Search and Filters */}
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
-              {/* Search Bar */}
-              <div className="flex-1 w-full lg:max-w-md">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Search Jobs</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                  <Input
-                    type="text"
-                    placeholder="Search by job title, company, or keywords..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:bg-gray-700/50 focus:border-blue-500 transition-all duration-300"
-                  />
-                </div>
+      {/* Search and Filters Section */}
+      <div className="mb-8 space-y-4">
+        {/* Search Bar */}
+        <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Input
+                type="text"
+                placeholder="Search for jobs..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-3 bg-white/5 border-white/20 text-white placeholder-gray-400 focus:border-blue-400 focus:ring-blue-400/20"
+              />
+            </div>
+          </div>
+          <Button
+            onClick={() => setShowFilters(!showFilters)}
+            variant="outline"
+            className="flex items-center gap-2 bg-white/5 border-white/20 text-white hover:bg-white/10 hover:border-blue-400 px-4 py-3"
+          >
+            <Filter size={20} />
+            <span className="hidden sm:inline">Filters</span>
+            {showFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </Button>
+        </div>
+
+        {/* Filters Panel */}
+        {showFilters && (
+          <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-lg p-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Location Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Location</label>
+                <Select value={selectedLocation} onValueChange={setSelectedLocation}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white hover:bg-white/10">
+                    <SelectValue placeholder="All Locations" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/95 border-white/20 text-white">
+                    <SelectItem value="all">All Locations</SelectItem>
+                    {locations.map((location) => (
+                      <SelectItem key={location} value={location}>
+                        {location}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
-              {/* Filter Toggle */}
-              <div className="flex items-end w-full lg:w-auto">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowFilters(!showFilters)}
-                  className="border-gray-600 hover:bg-gray-700/50 text-gray-200 bg-gray-800/50 w-full lg:w-auto transition-all duration-300"
-                >
-                  <Filter size={16} className="mr-2" />
-                  {showFilters ? 'Hide' : 'Show'} Filters
-                  {showFilters ? <ChevronUp size={16} className="ml-2" /> : <ChevronDown size={16} className="ml-2" />}
-                </Button>
+              {/* Company Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Company</label>
+                <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white hover:bg-white/10">
+                    <SelectValue placeholder="All Companies" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/95 border-white/20 text-white">
+                    <SelectItem value="all">All Companies</SelectItem>
+                    {companies.map((company) => (
+                      <SelectItem key={company} value={company}>
+                        {company}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Job Type Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Job Type</label>
+                <Select value={selectedJobType} onValueChange={setSelectedJobType}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white hover:bg-white/10">
+                    <SelectValue placeholder="All Types" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/95 border-white/20 text-white">
+                    <SelectItem value="all">All Types</SelectItem>
+                    {jobTypes.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Experience Level Filter */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Experience</label>
+                <Select value={selectedExperience} onValueChange={setSelectedExperience}>
+                  <SelectTrigger className="bg-white/5 border-white/20 text-white hover:bg-white/10">
+                    <SelectValue placeholder="All Levels" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-black/95 border-white/20 text-white">
+                    <SelectItem value="all">All Levels</SelectItem>
+                    {experienceLevels.map((level) => (
+                      <SelectItem key={level} value={level}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
-            {/* Filters */}
-            {showFilters && (
-              <div className="space-y-6 p-6 bg-gray-800/40 rounded-xl border border-gray-700/50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Location</label>
-                    <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700/70 transition-all duration-300">
-                        <SelectValue placeholder="All Locations" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
-                        <SelectItem value="all">All Locations</SelectItem>
-                        {locations.map(location => (
-                          <SelectItem key={location} value={location}>{location}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Company</label>
-                    <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700/70 transition-all duration-300">
-                        <SelectValue placeholder="All Companies" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
-                        <SelectItem value="all">All Companies</SelectItem>
-                        {companies.map(company => (
-                          <SelectItem key={company} value={company}>{company}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Job Type</label>
-                    <Select value={selectedJobType} onValueChange={setSelectedJobType}>
-                      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700/70 transition-all duration-300">
-                        <SelectValue placeholder="All Types" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
-                        <SelectItem value="all">All Types</SelectItem>
-                        {jobTypes.map(type => (
-                          <SelectItem key={type} value={type}>{type.replace('-', ' ')}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">Experience</label>
-                    <Select value={selectedExperience} onValueChange={setSelectedExperience}>
-                      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 hover:bg-gray-700/70 transition-all duration-300">
-                        <SelectValue placeholder="All Levels" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-gray-800 border-gray-600">
-                        <SelectItem value="all">All Levels</SelectItem>
-                        {experienceLevels.map(level => (
-                          <SelectItem key={level} value={level}>{level.charAt(0).toUpperCase() + level.slice(1)}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Results Count and Clear Filters */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                <p className="text-gray-300 text-sm">
-                  Showing <span className="text-white font-medium">{filteredJobs.length}</span> jobs
-                  {filteredJobs.length !== jobs.length && (
-                    <span className="text-gray-400 ml-1">
-                      (filtered from {jobs.length} total)
-                    </span>
-                  )}
-                </p>
-              </div>
-              {(selectedLocation !== "all" || selectedCompany !== "all" || selectedJobType !== "all" || selectedExperience !== "all") && (
-                <Button
-                  onClick={clearFilters}
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-600 hover:bg-gray-700/50 text-gray-200 bg-gray-800/50 transition-all duration-300"
-                >
-                  <X size={16} className="mr-2" />
-                  Clear filters
-                </Button>
-              )}
+            {/* Clear Filters Button */}
+            <div className="flex justify-end">
+              <Button
+                onClick={clearFilters}
+                variant="outline"
+                size="sm"
+                className="bg-red-500/20 border-red-500/30 text-red-300 hover:bg-red-500/30 hover:border-red-500/50"
+              >
+                Clear All Filters
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </section>
-
+          </div>
+        )}
+      </div>
 
 
       {/* Featured Jobs - Enhanced design */}

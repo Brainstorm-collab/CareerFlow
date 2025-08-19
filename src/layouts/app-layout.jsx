@@ -1,5 +1,5 @@
 import Header from "@/components/header";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useUser, useSession } from "@clerk/clerk-react";
 import { useEffect } from "react";
 import { syncUserToSupabase } from "@/utils/user-sync";
@@ -8,6 +8,7 @@ import "@/utils/test-database"; // Import for browser console testing
 const AppLayout = () => {
   const { user, isSignedIn } = useUser();
   const { session } = useSession();
+  const location = useLocation();
 
   // Automatically sync user to Supabase when they sign in
   useEffect(() => {
@@ -20,6 +21,11 @@ const AppLayout = () => {
       syncUserToSupabase(user, session).catch(console.error);
     }
   }, [isSignedIn, user, session]);
+
+  // Simple scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <div className="min-h-screen">
