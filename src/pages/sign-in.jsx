@@ -5,7 +5,7 @@ import { EmailLoginForm } from "../components/EmailLoginForm";
 import { EmailRegisterForm } from "../components/EmailRegisterForm";
 
 const SignInPage = () => {
-  const [authMode, setAuthMode] = useState('social'); // 'social', 'email-login', 'email-register'
+  const [authMode, setAuthMode] = useState('combined'); // 'combined', 'email-login', 'email-register'
   
   // Load Facebook SDK
   useEffect(() => {
@@ -53,40 +53,53 @@ const SignInPage = () => {
           />
         );
       default:
+        // Combined dark-themed sign-in: Social + Email + Guest + Sign-up link
         return (
-          <div className="bg-white py-8 px-6 shadow-xl rounded-lg border border-gray-200">
+          <div className="bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl border border-white/20 shadow-2xl rounded-2xl p-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+                Sign in to CareerFlow
+              </h2>
+              <p className="text-sm text-gray-300 mt-1">Welcome back! Choose a method below</p>
+            </div>
+
             <SocialLogin />
-            
-            <div className="mt-6 text-center">
-              <p className="text-sm text-gray-600">
+
+            <div className="mt-6">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="px-2 bg-gradient-to-br from-gray-900/95 to-black/95 text-gray-400">Or sign in with email</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <EmailLoginForm 
+                onSuccess={() => setAuthMode('combined')}
+                onSwitchToRegister={() => setAuthMode('email-register')}
+                variant="dark"
+              />
+            </div>
+
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-300">
                 Don't have an account?{" "}
                 <Link
                   to="/sign-up"
-                  className="font-medium text-purple-600 hover:text-purple-500 transition-colors"
+                  className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
                 >
                   Sign up here
                 </Link>
               </p>
             </div>
-            
-            <div className="mt-6 text-center">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-6">
-              <button
-                onClick={() => setAuthMode('email-login')}
-                className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
-              >
-                Sign in with Email
-              </button>
+
+            <div className="mt-3 text-center">
+              <Link to="/" className="text-xs text-gray-400 hover:text-gray-300 transition-colors">
+                Continue as Guest
+              </Link>
             </div>
           </div>
         );
@@ -96,33 +109,21 @@ const SignInPage = () => {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md p-4 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8">
-        {authMode === 'social' && (
-          <div className="text-center">
-            <h2 className="mt-6 text-3xl font-extrabold text-white">
-              Welcome back
-            </h2>
-            <p className="mt-2 text-sm text-gray-200">
-              Sign in to your account to continue
-            </p>
-          </div>
-        )}
+        <div className="text-center">
+          <h2 className="mt-6 text-3xl font-extrabold text-white">Welcome back</h2>
+          <p className="mt-2 text-sm text-gray-200">Sign in to your account to continue</p>
+        </div>
 
         {renderAuthForm()}
 
-        {authMode === 'social' && (
-          <div className="text-center">
-            <p className="text-xs text-gray-300">
-              By signing in, you agree to our{" "}
-              <a href="#" className="text-blue-300 hover:text-blue-200">
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a href="#" className="text-blue-300 hover:text-blue-200">
-                Privacy Policy
-              </a>
-            </p>
-          </div>
-        )}
+        <div className="text-center">
+          <p className="text-xs text-gray-300">
+            By signing in, you agree to our{" "}
+            <a href="#" className="text-blue-300 hover:text-blue-200">Terms of Service</a>{" "}
+            and{" "}
+            <a href="#" className="text-blue-300 hover:text-blue-200">Privacy Policy</a>
+          </p>
+        </div>
       </div>
     </div>
   );

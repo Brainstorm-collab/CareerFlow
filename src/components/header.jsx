@@ -255,7 +255,7 @@ const Header = () => {
               {/* Post Job link - role-based access */}
               {!isSignedIn ? (
                 <button 
-                  onClick={() => setShowSignIn(true)}
+                  onClick={() => navigate('/sign-in')}
                   className={`relative flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-500 font-medium group overflow-hidden ${
                     isActive("/post-job") 
                       ? "text-white bg-gradient-to-r from-green-500/30 to-emerald-500/30 border border-green-400/50 shadow-lg shadow-green-500/20" 
@@ -349,7 +349,7 @@ const Header = () => {
               {!isSignedIn ? (
                 <Button 
                   variant="outline" 
-                  onClick={() => setShowSignIn(true)}
+                  onClick={() => navigate('/sign-in')}
                   className={`hidden sm:inline-flex bg-gradient-to-r from-blue-500/20 to-purple-500/20 border-blue-400/30 hover:from-blue-500/30 hover:to-purple-500/30 hover:border-blue-400/50 text-white hover:text-white transition-all duration-500 shadow-lg hover:shadow-xl hover:shadow-blue-500/20 ${
                     isScrolled ? 'text-xs px-3 py-1.5' : 'text-sm px-4 py-2'
                   }`}
@@ -727,9 +727,9 @@ const Header = () => {
                 </Link>
 
                 {!isSignedIn ? (
-                  <button 
-                    onClick={() => {
-                      setShowSignIn(true);
+                <button 
+                  onClick={() => {
+                      navigate('/sign-in');
                       setIsMobileMenuOpen(false);
                     }}
                     className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-500 font-medium text-green-300 hover:text-white hover:bg-white/10 border border-transparent hover:border-green-400/30 w-full text-left group"
@@ -778,7 +778,7 @@ const Header = () => {
       </header>
 
       {/* Sign In Modal */}
-      {showSignIn && (
+              {false && showSignIn && (
         <div
           className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md z-50 p-4"
           onClick={handleOverlayClick}

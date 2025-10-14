@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
 
   // Redirect to sign in if not authenticated
   if (!isSignedIn) {
-    return <Navigate to="/?sign-in=true" replace />;
+    return <Navigate to="/sign-in" replace />;
   }
 
   // Redirect to onboarding if user doesn't have a role

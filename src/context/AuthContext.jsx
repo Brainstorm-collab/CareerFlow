@@ -38,27 +38,40 @@ export const AuthProvider = ({ children }) => {
   const socialLogin = async (provider, userData) => {
     try {
       setIsLoading(true);
-      
-      // Create user object with consistent structure
-      const user = {
-        id: userData.id || userData.sub || `social_${Date.now()}`,
-        email: userData.email || `${provider}_${userData.id}@${provider}.local`,
-        name: userData.name || userData.given_name || userData.first_name || 'User',
-        firstName: userData.given_name || userData.first_name || '',
-        lastName: userData.family_name || userData.last_name || '',
-        picture: userData.picture || userData.avatar_url || '',
+      // Only allow login for users who have already registered
+      const storedUsers = JSON.parse(localStorage.getItem('careerflow_users') || '[]');
+      const incomingEmail = (userData.email || '').toLowerCase();
+      const incomingProviderId = userData.id || userData.sub || '';
+
+      const existingUser = storedUsers.find((u) => {
+        const emailMatches = incomingEmail && u.email?.toLowerCase() === incomingEmail;
+        const providerMatches = incomingProviderId && (u.providerId === incomingProviderId || u.id === incomingProviderId);
+        return emailMatches || providerMatches;
+      });
+
+      if (!existingUser) {
+        return { success: false, error: 'No account found for this social login. Please sign up first.' };
+      }
+
+      // Build session user from existing registration, prefer fresh profile image/name from provider
+      const sessionUser = {
+        id: existingUser.id,
+        email: existingUser.email,
+        name: existingUser.name || userData.name || userData.given_name || userData.first_name || 'User',
+        firstName: existingUser.firstName || userData.given_name || userData.first_name || '',
+        lastName: existingUser.lastName || userData.family_name || userData.last_name || '',
+        picture: userData.picture || userData.avatar_url || existingUser.picture || '',
         provider: provider,
-        providerId: userData.id || userData.sub,
-        role: userData.role || null, // Include role from userData
-        createdAt: new Date().toISOString(),
-        lastLoginAt: new Date().toISOString()
+        providerId: existingUser.providerId || incomingProviderId,
+        role: existingUser.role || null,
+        createdAt: existingUser.createdAt || new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
       };
 
-      // Store user in localStorage
-      localStorage.setItem('careerflow_user', JSON.stringify(user));
-      setUser(user);
+      localStorage.setItem('careerflow_user', JSON.stringify(sessionUser));
+      setUser(sessionUser);
 
-      return { success: true, user };
+      return { success: true, user: sessionUser };
     } catch (error) {
       console.error(`${provider} login error:`, error);
       return { success: false, error: error.message };
