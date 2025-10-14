@@ -30,7 +30,7 @@
 - [🎨 UI Components](#-ui-components)
 - [🗄️ Database Schema](#️-database-schema)
 - [🔐 Authentication](#-authentication)
-- [📊 API Endpoints](#-api-endpoints)
+- [📊 Data & API (Convex)](#-data--api-convex)
 - [🚀 Deployment](#-deployment)
 - [🤝 Contributing](#-contributing)
 - [📄 License](#-license)
@@ -108,6 +108,7 @@ CareerFlow is a comprehensive job portal platform that bridges the gap between j
 - **ESLint** - Code linting and formatting
 - **PostCSS** - CSS processing
 - **Autoprefixer** - CSS vendor prefixing
+ - **Service Worker / PWA** - Offline caching and update prompts
 
 ---
 
@@ -185,9 +186,15 @@ CareerFlow/
 ├── 📁 convex/                # Backend functions and schema
 │   ├── schema.ts             # Database schema
 │   ├── users.ts              # User management
+│   ├── companies.ts          # Company management
 │   ├── jobs.ts               # Job operations
 │   ├── applications.ts       # Application handling
-│   └── companies.ts          # Company management
+│   ├── savedJobs.ts          # Saved jobs relations
+│   ├── fileUploads.ts        # Low-level file upload helpers
+│   ├── fileStorage.ts        # Upload URLs and profile resume helpers
+│   ├── migrations.ts         # Data migrations/cleanup utilities
+│   ├── seedData.ts           # Seed helpers
+│   └── testJobs.ts           # Test job utilities
 ├── package.json              # Dependencies and scripts
 ├── tailwind.config.js        # Tailwind configuration
 ├── vite.config.js            # Vite configuration
@@ -211,10 +218,9 @@ The project uses Tailwind CSS with custom configuration for:
 - Development server configuration
 
 ### Convex Backend
-- Real-time database
-- Serverless functions
-- File storage integration
-- Authentication middleware
+- Real-time database and serverless functions under `convex/`
+- File storage integration with upload URLs and storage-backed `fileUploads`
+- User sync utilities and data migrations
 
 ---
 
@@ -324,28 +330,55 @@ CareerFlow currently uses an internal `AuthContext` for simplified demo authenti
 
 ---
 
-## 📊 API Endpoints
+## 📊 Data & API (Convex)
 
-### User Management
-- `GET /api/users` - Get user profile
-- `PUT /api/users` - Update user profile
-- `POST /api/users` - Create user profile
+This project uses Convex functions (queries/mutations) instead of REST endpoints. Client access is via hooks that wrap `convex/react` and generated `api`.
 
-### Job Management
-- `GET /api/jobs` - List jobs with filters
-- `POST /api/jobs` - Create new job
-- `PUT /api/jobs/:id` - Update job
-- `DELETE /api/jobs/:id` - Delete job
+### Users
+- `users.getUserByEmail(email)` – Lookup by email
+- `users.getUserBySocialId(socialId)` – Lookup by auth/social ID
+- `users.getUsersByRole(role)` – List candidates or recruiters
+- `users.createUser({...})` – Create profile
+- `users.updateUser({...})` – Patch profile fields; auto-updates `fullName` when names change
+- `users.deleteUser(userId)` – Cascades applications, saved jobs, files, companies, and jobs
+- `users.updateUserRole({ socialId, role })` – Manually set role
+- `users.syncUser({...})` – Idempotent auth sync preserving user-customized fields
+- `users.migrateNameCustomized()` – One-off migration to set `nameCustomized`
 
-### Application Management
-- `GET /api/applications` - Get user applications
-- `POST /api/applications` - Submit application
-- `PUT /api/applications/:id` - Update application status
+Client hooks: see `src/api/apiUsers.js` for `useGetUser`, `useGetUsersByRole`, `useCreateUser`, etc.
 
-### Company Management
-- `GET /api/companies` - List companies
-- `POST /api/companies` - Create company
-- `PUT /api/companies/:id` - Update company
+### Jobs
+- `jobs.getJobs({...filters})` – Newest open jobs with in-memory filters and joined company/recruiter
+- `jobs.getJob({ jobId })` – Job with company, recruiter, applications, and saved status
+- `jobs.getJobsByRecruiter({ recruiterId })`
+- `jobs.createJob({...})`, `jobs.updateJob({...})`, `jobs.deleteJob({ jobId })`
+- `jobs.incrementViewCount({ jobId })`
+- Utilities: `jobs.updateJobsWithDiverseCompanies()`, `jobs.createRealJobs()`
+
+Client hooks: see `src/api/apiApplication.js`/`apiJobs.js` for `useGetJobs`, `useGetJob`, `useCreateJob`, etc.
+
+### Applications
+- `applications.createApplication({...})` – Validates user/job, supports sample-job fallback
+- `applications.getApplicationsByUser({ socialId })` – Auto-migrates missing profile data into applications
+- `applications.getApplicationsByJob({ jobId })` – Includes candidate and resume file metadata
+- `applications.updateApplicationStatus({...})`
+- `applications.withdrawApplication({...})`
+- Utilities: `applications.cleanupInvalidApplicationResumeUrls()`
+
+### Companies
+- `companies.getCompanies({...})`, `companies.getCompany({ companyId })`, `companies.getCompanyBySlug({ slug })`
+- `companies.getCompaniesByCreator({ createdBy })`
+- `companies.createCompany({...})`, `companies.updateCompany({...})`, `companies.deleteCompany({ companyId })`
+
+### Files & Storage
+- `fileStorage.generateUploadUrl({...})` – Secure direct upload
+- `fileStorage.updateFileUrl({...})` – Finalize upload and persist URL
+- `fileStorage.uploadResumeAndUpdateProfile({...})` – Upload and set user `resumeUrl`
+- `fileStorage.getFilesByUser({ socialId })`, `fileStorage.getFile({ fileId })`
+- `fileStorage.deleteFile({ fileId })`, `fileStorage.cleanupDuplicateFiles({ socialId })`
+- Low-level helpers in `convex/fileUploads.ts` for storage URLs and records
+
+Client: configure Convex in `src/lib/convex.ts` using `VITE_CONVEX_URL`.
 
 ---
 
@@ -370,6 +403,9 @@ npm run build
 
 The build creates optimized production files in the `dist/` directory.
 
+### Vercel Config
+Static SPA rewrites and security headers are configured in `vercel.json`.
+
 ---
 
 ## ⚡ Performance Optimizations
@@ -377,7 +413,12 @@ The build creates optimized production files in the `dist/` directory.
 - Route-level code splitting with lazy-loaded pages and skeleton fallbacks
 - Virtualized job lists for smooth rendering at scale
 - Smart prefetching of likely next routes via `usePrefetch`
-- Service Worker caching for static assets with update prompts
+- **Caching/offline**: Service worker registered in `src/main.jsx` with logic in `public/sw.js` and helpers in `src/utils/service-worker.js`.
+
+### PWA Notes
+- Service worker auto-caches key assets and prompts users on updates.
+- Background sync and push hooks are scaffolded in `public/sw.js`.
+- You can clear caches via `cacheManager.clearAllCaches()` from `src/utils/service-worker.js`.
 - Convex realtime queries/mutations for instant UI updates
 - Memoization and debounced inputs for heavy computations
 
