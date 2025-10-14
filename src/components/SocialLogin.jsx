@@ -48,7 +48,7 @@ export const SocialLogin = ({
   const navigate = useNavigate();
   
   // Google and Facebook App IDs - using environment variables for better security
-  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "419183498411-aco9polgjn5va01kbg3legvvmq6ibq1h.apps.googleusercontent.com";
+  const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "627920922113-s113markc4ltdfa8tohu13u05t6bs01c.apps.googleusercontent.com";
   const facebookAppId = import.meta.env.VITE_FACEBOOK_APP_ID || "839782072858430";
   
   // Callback URLs for OAuth providers

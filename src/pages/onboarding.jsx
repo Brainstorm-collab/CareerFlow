@@ -120,7 +120,7 @@ const Onboarding = () => {
   };
 
   return (
-    <div className="h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-y-auto">
       {/* Website Background */}
       <div className="grid-background"></div>
       
@@ -131,8 +131,8 @@ const Onboarding = () => {
 
       <main className="relative z-10 h-full flex flex-col">
         {/* Header Section */}
-        <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-8">
-          <div className="max-w-5xl mx-auto w-full">
+        <div className="flex-1 flex items-center justify-center px-4 sm:px-5 lg:px-6 py-4">
+          <div className="max-w-4xl mx-auto w-full">
             {/* Hero Section */}
             <div className="text-center mb-8">
               {/* Logo */}
@@ -140,22 +140,22 @@ const Onboarding = () => {
                 <img 
                   src="/newlogo.png" 
                   alt="CareerFlow Logo" 
-                  className="h-16 w-auto"
+                  className="h-12 sm:h-14 w-auto"
                 />
               </div>
               
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-3 leading-tight">
                 Welcome to{" "}
                 <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-emerald-400 bg-clip-text text-transparent">
                   CareerFlow
                 </span>
               </h1>
               
-              <p className="text-lg text-slate-300 mb-4 max-w-xl mx-auto">
+              <p className="text-base text-slate-300 mb-3 max-w-xl mx-auto">
                 Choose your path and unlock your potential
               </p>
               
-              <div className="flex items-center justify-center gap-4 text-xs text-slate-400">
+              <div className="flex items-center justify-center gap-3 text-xs text-slate-400">
                 <div className="flex items-center gap-1">
                   <Shield size={14} className="text-emerald-400" />
                   <span>Secure & Trusted</span>
@@ -172,7 +172,7 @@ const Onboarding = () => {
             </div>
 
             {/* Role Selection Cards */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
               {roles.map((role, index) => (
                 <Card
                   key={role.id}
@@ -186,12 +186,12 @@ const Onboarding = () => {
                   {/* Card Background Gradient */}
                   <div className={`absolute inset-0 ${role.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
                   
-                  <CardHeader className="relative z-10 text-center pb-4">
-                    <div className={`w-16 h-16 bg-gradient-to-br ${role.color} rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                      <role.icon size={32} className="text-white" />
+                  <CardHeader className="relative z-10 text-center pb-3">
+                    <div className={`w-12 h-12 bg-gradient-to-br ${role.color} rounded-xl flex items-center justify-center mx-auto mb-3 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                      <role.icon size={24} className="text-white" />
                     </div>
                     
-                    <CardTitle className="text-2xl font-bold text-white mb-2">
+                    <CardTitle className="text-xl font-bold text-white mb-2">
                       {role.title}
                     </CardTitle>
                     
@@ -201,7 +201,7 @@ const Onboarding = () => {
                     
                     <Badge 
                       variant="outline" 
-                      className={`inline-flex items-center gap-1 px-3 py-1 text-xs font-medium ${
+                      className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium ${
                         role.id === 'candidate' 
                           ? 'border-blue-500/30 text-blue-300 bg-blue-500/10' 
                           : 'border-emerald-500/30 text-emerald-300 bg-emerald-500/10'
@@ -217,7 +217,7 @@ const Onboarding = () => {
                       {role.features.map((feature, featureIndex) => (
                         <div key={featureIndex} className="flex items-start gap-2 text-slate-300">
                           <CheckCircle 
-                            size={16} 
+                            size={14} 
                             className={`mt-0.5 flex-shrink-0 ${
                               role.id === 'candidate' ? 'text-blue-400' : 'text-emerald-400'
                             }`} 
@@ -249,12 +249,12 @@ const Onboarding = () => {
 
             {/* Continue Button */}
             {selectedRole && (
-              <div className="text-center mb-6">
+              <div className="sticky bottom-0 left-0 right-0 z-20 text-center py-3 px-4 bg-slate-900/70 backdrop-blur">
                 <Button
                   onClick={() => handleRoleSelect(roles.find(r => r.id === selectedRole))}
                   disabled={loading}
-                  size="lg"
-                  className={`px-8 py-4 text-base font-semibold rounded-xl shadow-xl transition-all duration-300 hover:scale-105 ${
+                  size="sm"
+                  className={`px-6 py-3 text-sm font-semibold rounded-lg shadow-xl transition-all duration-300 hover:scale-105 ${
                     selectedRole === 'candidate' 
                       ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-blue-500/25' 
                       : 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-emerald-500/25'

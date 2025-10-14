@@ -16,8 +16,7 @@ import { Label } from "./ui/label";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import useFetch from "@/hooks/use-fetch";
-import { applyToJob } from "@/api/apiApplication";
+import { useApplyToJob } from "@/api/apiApplication";
 import { BarLoader } from "react-spinners";
 import { useJobContext } from "@/context/JobContext";
 import { useToast } from "@/context/ToastContext";
@@ -55,13 +54,11 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
   const { applyToJob: applyToJobContext } = useJobContext();
   const { showSuccess, showError } = useToast();
 
-  const {
-    loading: loadingApply,
-    error: errorApply,
-    fn: fnApply,
-  } = useFetch(applyToJob);
+  const applyToJobMutation = useApplyToJob();
+  const [loadingApply, setLoadingApply] = React.useState(false);
+  const [errorApply, setErrorApply] = React.useState(null);
 
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     console.log('Submitting application for job:', job.id);
     console.log('User data:', user);
     console.log('Form data:', data);
@@ -75,32 +72,37 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
       6000
     );
     
-    // Try to submit to Supabase
-    fnApply({
-      ...data,
-      job_id: job.id,
-      candidate_id: user.id,
-      name: user.fullName || user.firstName + ' ' + user.lastName,
-      status: "applied",
-      resume: data.resume[0],
-    }).then((result) => {
-      console.log('Application submitted successfully to Supabase:', result);
-      
+    // Submit to Convex backend
+    try {
+      setLoadingApply(true);
+      setErrorApply(null);
+
+      const applicationPayload = {
+        socialId: user.id,
+        jobId: String(job.id),
+        education: data.education,
+        experienceYears: String(data.experience ?? ''),
+        skills: data.skills ? String(data.skills).split(',').map(s => s.trim()).filter(Boolean) : [],
+      };
+
+      // For now, we do not upload resume here; resume upload happens in profile
+      const result = await applyToJobMutation(applicationPayload);
+      console.log('Application submitted to Convex:', result);
+
       // Refresh job data to get updated application count
       fetchJob();
       reset();
-    }).catch((error) => {
-      console.error('Error applying to job in Supabase:', error);
-      
-      // Show additional error toast if Supabase fails
+    } catch (error) {
+      console.error('Error applying to job via Convex:', error);
+      setErrorApply({ message: error?.message || 'Failed to submit application' });
       showError(
         `Application saved locally but failed to sync with server. Please check your connection and try again.`,
         5000
       );
-      
-      // Still refresh to show any partial updates
       fetchJob();
-    });
+    } finally {
+      setLoadingApply(false);
+    }
   };
 
   return (

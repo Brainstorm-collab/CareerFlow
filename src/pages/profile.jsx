@@ -676,12 +676,12 @@ const ProfilePage = () => {
                     console.log('🔄 Manual sync triggered');
                     const result = await syncUser({
                       socialId: user.id,
-                      provider: 'clerk',
-                      email: user.emailAddresses[0]?.emailAddress || '',
+                      provider: user.provider,
+                      email: user.email || '',
                       firstName: user.firstName || '',
                       lastName: user.lastName || '',
-                      fullName: user.fullName || '',
-                      profileImageUrl: user.imageUrl || '',
+                      fullName: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim(),
+                      profileImageUrl: user.picture || '',
                     });
                     showSuccess('Account synced successfully!');
                     setRefreshKey(prev => prev + 1);
@@ -1180,7 +1180,6 @@ const ProfilePage = () => {
                   </div>
                   <Input
                     id="skills"
-                    value=""
                     placeholder="Add a skill and press Enter"
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {

@@ -12,11 +12,17 @@ import { ConvexProvider, convex } from "./lib/convex";
 
 import LandingPage from "./pages/landing";
 import Onboarding from "./pages/onboarding";
-import PostJob from "./pages/post-job";
-import JobListing from "./pages/jobListing";
-import MyJobs from "./pages/my-jobs";
-import SavedJobs from "./pages/saved-jobs";
-import MyApplications from "./pages/my-applications";
+import {
+  LazyJobListingWithSkeleton,
+  LazyProfileWithSkeleton,
+  LazyMyApplicationsWithSkeleton,
+  LazySavedJobsWithSkeleton,
+  LazyPostJobWithSkeleton,
+  LazyMyJobsWithSkeleton,
+  LazyJobDetailsWithSkeleton,
+  LazyCandidatesWithSkeleton,
+  LazyJobApplicantsWithSkeleton,
+} from "./components/lazy-components";
 import MyResumes from "./pages/my-resumes";
 import CleanupResumes from "./pages/cleanup-resumes";
 import RoleDebug from "./pages/role-debug";
@@ -27,11 +33,11 @@ import Candidates from "./pages/candidates";
 import Unauthorized from "./pages/unauthorized";
 import FixLogos from "./pages/fix-logos";
 
-import JobPage from "./pages/job";
+// Job details now lazy-loaded via wrapper
 import ApplicationStatus from "./pages/application-status";
 import AboutPage from "./pages/about";
 import ContactPage from "./pages/contact";
-import ProfilePage from "./pages/profile";
+// Profile now lazy-loaded via wrapper
 import SignInPage from "./pages/sign-in";
 import SignUpPage from "./pages/sign-up";
 import ForgotPasswordPage from "./pages/forgot-password";
@@ -44,22 +50,10 @@ import Notifications from "./pages/notifications";
 import "./App.css";
 
 const router = createBrowserRouter([
-  // Auth routes (outside of main app layout)
+  // Auth test routes (kept separate if needed)
   {
     element: <AuthLayout />,
     children: [
-      {
-        path: "/sign-in",
-        element: <SignInPage />,
-      },
-      {
-        path: "/sign-up",
-        element: <SignUpPage />,
-      },
-      {
-        path: "/forgot-password",
-        element: <ForgotPasswordPage />,
-      },
       {
         path: "/auth-test",
         element: <AuthTestPage />,
@@ -77,6 +71,19 @@ const router = createBrowserRouter([
       {
         path: "/",
         element: <LandingPage />,
+      },
+      // Auth routes as modal overlays within the main app
+      {
+        path: "/sign-in",
+        element: <SignInPage />,
+      },
+      {
+        path: "/sign-up",
+        element: <SignUpPage />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPasswordPage />,
       },
       {
         path: "/about",
@@ -98,7 +105,7 @@ const router = createBrowserRouter([
         path: "/jobs",
         element: (
           <ProtectedRoute>
-            <JobListing />
+            <LazyJobListingWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -106,7 +113,7 @@ const router = createBrowserRouter([
         path: "/post-job",
         element: (
           <ProtectedRoute>
-            <PostJob />
+            <LazyPostJobWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -114,7 +121,7 @@ const router = createBrowserRouter([
         path: "/my-jobs",
         element: (
           <ProtectedRoute>
-            <MyJobs />
+            <LazyMyJobsWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -130,7 +137,7 @@ const router = createBrowserRouter([
         path: "/saved-jobs",
         element: (
           <ProtectedRoute>
-            <SavedJobs />
+            <LazySavedJobsWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -138,7 +145,7 @@ const router = createBrowserRouter([
         path: "/my-applications",
         element: (
           <ProtectedRoute>
-            <MyApplications />
+            <LazyMyApplicationsWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -162,7 +169,7 @@ const router = createBrowserRouter([
         path: "/profile",
         element: (
           <ProtectedRoute>
-            <ProfilePage />
+            <LazyProfileWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -178,7 +185,7 @@ const router = createBrowserRouter([
         path: "/job/:id",
         element: (
           <ProtectedRoute>
-            <JobPage />
+            <LazyJobDetailsWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -212,7 +219,7 @@ const router = createBrowserRouter([
         path: "/job/:jobId/applicants",
         element: (
           <ProtectedRoute>
-            <JobApplicants />
+            <LazyJobApplicantsWithSkeleton />
           </ProtectedRoute>
         ),
       },
@@ -257,7 +264,7 @@ const router = createBrowserRouter([
         path: "/candidates",
         element: (
           <ProtectedRoute>
-            <Candidates />
+            <LazyCandidatesWithSkeleton />
           </ProtectedRoute>
         ),
       },

@@ -611,173 +611,174 @@ The Hiring Team
                 <h2 className="text-xl font-bold text-white mb-2">What type of interview?</h2>
                 <p className="text-gray-300 text-sm">Choose the format that works best for this interview</p>
               </div>
-              
-              <div className="flex-1 overflow-y-auto space-y-4">
-                <Label className="text-sm font-bold text-gray-300 mb-4 block flex items-center gap-2">
-                  <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
-                    <Users size={16} className="text-indigo-400" />
-                  </div>
-                  Interview Type *
-                </Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {interviewTypes.map((type) => {
-                    const Icon = type.icon;
-                    const isSelected = formData.type === type.value;
-                    return (
-                      <button
-                        key={type.value}
-                        type="button"
-                        onClick={() => handleInputChange('type', type.value)}
-                        className={`p-4 rounded-xl border transition-all duration-300 hover:scale-105 group relative ${
-                          isSelected
-                            ? `border-${type.color}-400 bg-${type.color}-500/20 text-white shadow-lg`
-                            : 'border-white/20 hover:border-white/30 text-gray-300 hover:shadow-lg bg-gray-800/30'
-                        }`}
-                      >
-                        {type.popular && (
-                          <div className="absolute -top-2 -right-2">
-                            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
-                              <Star size={10} className="mr-1" />
-                              Popular
-                            </Badge>
-                          </div>
-                        )}
-                        <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center transition-all duration-300 ${
-                          isSelected 
-                            ? `bg-${type.color}-500/30` 
-                            : 'bg-white/10 group-hover:bg-white/20'
-                        }`}>
-                          <Icon size={20} className={`transition-all duration-300 ${
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="bg-slate-900/50 border border-slate-700/50 rounded-2xl p-4">
+                  <Label className="text-sm font-bold text-gray-300 mb-4 block flex items-center gap-2">
+                    <div className="w-8 h-8 bg-indigo-500/20 rounded-lg flex items-center justify-center">
+                      <Users size={16} className="text-indigo-400" />
+                    </div>
+                    Interview Type *
+                  </Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {interviewTypes.map((type) => {
+                      const Icon = type.icon;
+                      const isSelected = formData.type === type.value;
+                      return (
+                        <button
+                          key={type.value}
+                          type="button"
+                          onClick={() => handleInputChange('type', type.value)}
+                          className={`${
+                            isSelected
+                              ? `border-${type.color}-400 bg-${type.color}-500/20 text-white shadow-lg`
+                              : 'border-white/20 hover:border-white/30 text-gray-300 hover:shadow-lg bg-gray-800/30'
+                          } p-4 rounded-xl border transition-all duration-300 hover:scale-105 group relative`}
+                        >
+                          {type.popular && (
+                            <div className="absolute -top-2 -right-2">
+                              <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white border-0 shadow-lg text-xs">
+                                <Star size={10} className="mr-1" />
+                                Popular
+                              </Badge>
+                            </div>
+                          )}
+                          <div className={`${
                             isSelected 
-                              ? `text-${type.color}-400` 
-                              : 'text-gray-400 group-hover:text-gray-300'
-                          }`} />
-                        </div>
-                        <div className="text-base font-bold mb-1">{type.label}</div>
-                        <div className="text-xs text-gray-400">{type.description}</div>
-                      </button>
-                    );
-                  })}
+                              ? `bg-${type.color}-500/30` 
+                              : 'bg-white/10 group-hover:bg-white/20'
+                          } w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center transition-all duration-300`}>
+                            <Icon size={20} className={`${
+                              isSelected 
+                                ? `text-${type.color}-400` 
+                                : 'text-gray-400 group-hover:text-gray-300'
+                            } transition-all duration-300`} />
+                          </div>
+                          <div className="text-base font-bold mb-1">{type.label}</div>
+                          <div className="text-xs text-gray-400">{type.description}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {errors.type && (
+                    <div className="flex items-center gap-2 text-red-400 text-xs mt-4">
+                      <AlertCircle size={14} />
+                      <span>{errors.type}</span>
+                    </div>
+                  )}
                 </div>
-                {errors.type && (
-                  <div className="flex items-center gap-2 text-red-400 text-xs mt-4">
-                    <AlertCircle size={14} />
-                    <span>{errors.type}</span>
+
+                {formData.type === 'video' && (
+                  <div className="space-y-3 p-4 bg-slate-900/50 rounded-2xl border border-blue-500/20">
+                    <Label htmlFor="meetingLink" className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                      <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                        <Video size={16} className="text-blue-400" />
+                      </div>
+                      Meeting Link *
+                    </Label>
+                    <Input
+                      id="meetingLink"
+                      type="url"
+                      placeholder="https://meet.google.com/abc-defg-hij or https://zoom.us/j/123456789"
+                      value={formData.meetingLink}
+                      onChange={(e) => handleInputChange('meetingLink', e.target.value)}
+                      className={`${
+                        errors.meetingLink 
+                          ? 'border-red-400 focus:border-red-400' 
+                          : 'focus:border-blue-400 hover:border-blue-300'
+                      } h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white`}
+                    />
+                    {errors.meetingLink && (
+                      <div className="flex items-center gap-2 text-red-400 text-xs">
+                        <AlertCircle size={14} />
+                        <span>{errors.meetingLink}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-blue-400 flex items-center gap-2">
+                      <Globe size={14} />
+                      Supports Zoom, Google Meet, Teams, and other video platforms
+                    </p>
                   </div>
                 )}
-              </div>
 
-              {formData.type === 'video' && (
-                <div className="space-y-3 p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
-                  <Label htmlFor="meetingLink" className="text-sm font-bold text-gray-300 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                      <Video size={16} className="text-blue-400" />
-                    </div>
-                    Meeting Link *
-                  </Label>
-                  <Input
-                    id="meetingLink"
-                    type="url"
-                    placeholder="https://meet.google.com/abc-defg-hij or https://zoom.us/j/123456789"
-                    value={formData.meetingLink}
-                    onChange={(e) => handleInputChange('meetingLink', e.target.value)}
-                    className={`h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white ${
-                      errors.meetingLink 
-                        ? 'border-red-400 focus:border-red-400' 
-                        : 'focus:border-blue-400 hover:border-blue-300'
-                    }`}
-                  />
-                  {errors.meetingLink && (
-                    <div className="flex items-center gap-2 text-red-400 text-xs">
-                      <AlertCircle size={14} />
-                      <span>{errors.meetingLink}</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-blue-400 flex items-center gap-2">
-                    <Globe size={14} />
-                    Supports Zoom, Google Meet, Teams, and other video platforms
-                  </p>
-                </div>
-              )}
+                {formData.type === 'in-person' && (
+                  <div className="space-y-3 p-4 bg-slate-900/50 rounded-2xl border border-red-500/20">
+                    <Label htmlFor="location" className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                      <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
+                        <MapPin size={16} className="text-red-400" />
+                      </div>
+                      Location *
+                    </Label>
+                    <Input
+                      id="location"
+                      placeholder="e.g., 123 Main St, Suite 100, City, State 12345"
+                      value={formData.location}
+                      onChange={(e) => handleInputChange('location', e.target.value)}
+                      className={`${
+                        errors.location 
+                          ? 'border-red-400 focus:border-red-400' 
+                          : 'focus:border-red-400 hover:border-red-300'
+                      } h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white`}
+                    />
+                    {errors.location && (
+                      <div className="flex items-center gap-2 text-red-400 text-xs">
+                        <AlertCircle size={14} />
+                        <span>{errors.location}</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-red-400 flex items-center gap-2">
+                      <MapPin size={14} />
+                      Include full address and any specific meeting room details
+                    </p>
+                  </div>
+                )}
 
-              {formData.type === 'in-person' && (
-                <div className="space-y-3 p-3 bg-red-500/10 rounded-xl border border-red-500/20">
-                  <Label htmlFor="location" className="text-sm font-bold text-gray-300 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                      <MapPin size={16} className="text-red-400" />
-                    </div>
-                    Location *
-                  </Label>
-                  <Input
-                    id="location"
-                    placeholder="e.g., 123 Main St, Suite 100, City, State 12345"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    className={`h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white ${
-                      errors.location 
-                        ? 'border-red-400 focus:border-red-400' 
-                        : 'focus:border-red-400 hover:border-red-300'
-                    }`}
-                  />
-                  {errors.location && (
-                    <div className="flex items-center gap-2 text-red-400 text-xs">
-                      <AlertCircle size={14} />
-                      <span>{errors.location}</span>
-                    </div>
-                  )}
-                  <p className="text-xs text-red-400 flex items-center gap-2">
-                    <MapPin size={14} />
-                    Include full address and any specific meeting room details
-                  </p>
-                </div>
-              )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl p-4">
+                    <Label htmlFor="interviewer" className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                      <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                        <User size={16} className="text-purple-400" />
+                      </div>
+                      Interviewer Name
+                    </Label>
+                    <Input
+                      id="interviewer"
+                      placeholder="e.g., John Smith, Sarah Johnson"
+                      value={formData.interviewer}
+                      onChange={(e) => handleInputChange('interviewer', e.target.value)}
+                      className={`${
+                        errors.interviewer 
+                          ? 'border-red-400 focus:border-red-400' 
+                          : 'focus:border-purple-400 hover:border-purple-300'
+                      } h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white`}
+                    />
+                    {errors.interviewer && (
+                      <div className="flex items-center gap-2 text-red-400 text-xs">
+                        <AlertCircle size={14} />
+                        <span>{errors.interviewer}</span>
+                      </div>
+                    )}
+                  </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <Label htmlFor="interviewer" className="text-sm font-bold text-gray-300 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                      <User size={16} className="text-purple-400" />
-                    </div>
-                    Interviewer Name
-                  </Label>
-                  <Input
-                    id="interviewer"
-                    placeholder="e.g., John Smith, Sarah Johnson"
-                    value={formData.interviewer}
-                    onChange={(e) => handleInputChange('interviewer', e.target.value)}
-                    className={`h-10 text-sm border border-white/20 rounded-lg transition-all duration-300 bg-gray-800/50 text-white ${
-                      errors.interviewer 
-                        ? 'border-red-400 focus:border-red-400' 
-                        : 'focus:border-purple-400 hover:border-purple-300'
-                    }`}
-                  />
-                  {errors.interviewer && (
-                    <div className="flex items-center gap-2 text-red-400 text-xs">
-                      <AlertCircle size={14} />
-                      <span>{errors.interviewer}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <Label htmlFor="reminder" className="text-sm font-bold text-gray-300 flex items-center gap-2">
-                    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
-                      <Clock size={16} className="text-green-400" />
-                    </div>
-                    Send Reminder
-                  </Label>
-                  <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
-                    <SelectTrigger className="h-10 text-sm border border-white/20 focus:border-green-400 rounded-lg bg-gray-800/50 text-white">
-                      <SelectValue placeholder="Select reminder time" />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-lg border border-white/20 bg-gray-800/90 backdrop-blur-sm">
-                      {reminders.map((reminder) => (
-                        <SelectItem key={reminder.value} value={reminder.value} className="text-sm py-3 hover:bg-green-500/20 text-white">
-                          {reminder.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="space-y-3 bg-slate-900/50 border border-slate-700/50 rounded-2xl p-4">
+                    <Label htmlFor="reminder" className="text-sm font-bold text-gray-300 flex items-center gap-2">
+                      <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                        <Clock size={16} className="text-green-400" />
+                      </div>
+                      Send Reminder
+                    </Label>
+                    <Select value={formData.reminder} onValueChange={(value) => handleInputChange('reminder', value)}>
+                      <SelectTrigger className="h-10 text-sm border border-white/20 focus:border-green-400 rounded-lg bg-gray-800/50 text-white">
+                        <SelectValue placeholder="Select reminder time" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-lg border border-white/20 bg-gray-800/90 backdrop-blur-sm">
+                        {reminders.map((reminder) => (
+                          <SelectItem key={reminder.value} value={reminder.value} className="text-sm py-3 hover:bg-green-500/20 text-white">
+                            {reminder.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>
@@ -785,127 +786,129 @@ The Hiring Team
 
           {/* Step 3: Review & Notes */}
           {step === 3 && (
-            <div className="flex-1 flex flex-col">
+            <div className="flex-1 flex flex-col overflow-hidden">
               <div className="text-center mb-4">
                 <h2 className="text-xl font-bold text-white mb-2">Review & Confirm</h2>
                 <p className="text-gray-300 text-sm">Please review the details before sending the invitation</p>
               </div>
-              
-              <div className="p-6 bg-gradient-to-br from-gray-800/50 via-gray-900/50 to-black/50 rounded-2xl border border-white/20 shadow-lg flex-1 overflow-hidden">
-                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
-                    <CheckCircle size={20} className="text-green-400" />
-                  </div>
-                  Interview Summary
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 overflow-y-auto flex-1">
-                  <div className="space-y-3">
-                    <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                        <Calendar size={24} className="text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300 font-medium mb-1">Date & Time</p>
-                        <p className="text-lg font-bold text-white">
-                          {new Date(`${formData.date}T${formData.time}`).toLocaleDateString('en-US', {
-                            weekday: 'long',
-                            year: 'numeric',
-                            month: 'long',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </p>
-                      </div>
+
+              <div className="flex-1 overflow-y-auto px-6 pb-24 space-y-6">
+                <div className="bg-slate-900/50 rounded-2xl border border-white/20 shadow-lg p-6">
+                  <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-3">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-xl flex items-center justify-center">
+                      <CheckCircle size={20} className="text-green-400" />
                     </div>
-                    
-                    <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
-                      <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
-                        <Clock size={24} className="text-green-400" />
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300 font-medium mb-1">Duration</p>
-                        <p className="text-lg font-bold text-white">{formData.duration} minutes</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
-                      <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                        {formData.type === 'video' && <Video size={24} className="text-blue-400" />}
-                        {formData.type === 'phone' && <Phone size={24} className="text-green-400" />}
-                        {formData.type === 'in-person' && <MapPin size={24} className="text-red-400" />}
-                        {formData.type === 'panel' && <Users size={24} className="text-purple-400" />}
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-300 font-medium mb-1">Type</p>
-                        <p className="text-lg font-bold text-white capitalize">{formData.type} Interview</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    {formData.location && (
-                      <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
-                        <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
-                          <MapPin size={24} className="text-red-400" />
-                        </div>
-                        <div>
-                          <p className="text-sm text-gray-300 font-medium mb-1">Location</p>
-                          <p className="text-lg font-bold text-white">{formData.location}</p>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {formData.meetingLink && (
+                    Interview Summary
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-3">
                       <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
                         <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                          <Video size={24} className="text-blue-400" />
+                          <Calendar size={24} className="text-blue-400" />
                         </div>
                         <div>
-                          <p className="text-sm text-gray-300 font-medium mb-1">Meeting Link</p>
-                          <a href={formData.meetingLink} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-blue-400 hover:text-blue-300 underline transition-colors">
-                            Join Meeting
-                          </a>
+                          <p className="text-sm text-gray-300 font-medium mb-1">Date & Time</p>
+                          <p className="text-lg font-bold text-white">
+                            {new Date(`${formData.date}T${formData.time}`).toLocaleDateString('en-US', {
+                              weekday: 'long',
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
                         </div>
                       </div>
-                    )}
-                    
-                    {formData.interviewer && (
+
+                      <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
+                        <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center">
+                          <Clock size={24} className="text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-300 font-medium mb-1">Duration</p>
+                          <p className="text-lg font-bold text-white">{formData.duration} minutes</p>
+                        </div>
+                      </div>
+
                       <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
                         <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                          <User size={24} className="text-purple-400" />
+                          {formData.type === 'video' && <Video size={24} className="text-blue-400" />}
+                          {formData.type === 'phone' && <Phone size={24} className="text-green-400" />}
+                          {formData.type === 'in-person' && <MapPin size={24} className="text-red-400" />}
+                          {formData.type === 'panel' && <Users size={24} className="text-purple-400" />}
                         </div>
                         <div>
-                          <p className="text-sm text-gray-300 font-medium mb-1">Interviewer</p>
-                          <p className="text-lg font-bold text-white">{formData.interviewer}</p>
+                          <p className="text-sm text-gray-300 font-medium mb-1">Type</p>
+                          <p className="text-lg font-bold text-white capitalize">{formData.type} Interview</p>
                         </div>
                       </div>
-                    )}
+                    </div>
+
+                    <div className="space-y-3">
+                      {formData.location && (
+                        <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
+                          <div className="w-12 h-12 bg-red-500/20 rounded-xl flex items-center justify-center">
+                            <MapPin size={24} className="text-red-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-300 font-medium mb-1">Location</p>
+                            <p className="text-lg font-bold text-white">{formData.location}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.meetingLink && (
+                        <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
+                          <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                            <Video size={24} className="text-blue-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-300 font-medium mb-1">Meeting Link</p>
+                            <a href={formData.meetingLink} target="_blank" rel="noopener noreferrer" className="text-lg font-bold text-blue-400 hover:text-blue-300 underline transition-colors">
+                              Join Meeting
+                            </a>
+                          </div>
+                        </div>
+                      )}
+
+                      {formData.interviewer && (
+                        <div className="flex items-start gap-4 p-4 bg-gray-800/50 border border-white/20 rounded-2xl shadow-sm">
+                          <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                            <User size={24} className="text-purple-400" />
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-300 font-medium mb-1">Interviewer</p>
+                            <p className="text-lg font-bold text-white">{formData.interviewer}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <Label htmlFor="notes" className="text-lg font-bold text-gray-800 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center">
-                    <FileText size={20} className="text-gray-600" />
-                  </div>
-                  Additional Notes (Optional)
-                </Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Any additional information for the candidate (e.g., what to bring, preparation tips, etc.)..."
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  className="border-2 border-gray-200 focus:border-gray-400 rounded-2xl text-lg p-4"
-                  rows={4}
-                />
+                <div className="bg-slate-900/50 rounded-2xl border border-white/20 shadow-lg p-6">
+                  <Label htmlFor="notes" className="text-sm font-bold text-gray-300 flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 bg-gray-800 rounded-xl flex items-center justify-center">
+                      <FileText size={20} className="text-gray-300" />
+                    </div>
+                    Additional Notes (Optional)
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Any additional information for the candidate (e.g., what to bring, preparation tips, etc.)..."
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    className="border border-white/20 focus:border-gray-400 rounded-xl text-base p-4 bg-gray-800/50 text-white"
+                    rows={4}
+                  />
+                </div>
               </div>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center p-6 border-t border-slate-700/50 bg-slate-800/30">
+          <div className="z-20 flex justify-between items-center p-6 border-t border-slate-700/50 bg-slate-800/30">
             <div>
               {step > 1 && (
                 <Button

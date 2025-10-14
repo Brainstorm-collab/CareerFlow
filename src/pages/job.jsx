@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { sampleJobs } from "@/data/sampleJobs";
 import { 
@@ -32,6 +32,7 @@ import { useNavigate } from "react-router-dom";
 
 const JobPage = () => {
   const { id } = useParams();
+  const location = useLocation();
   const { user } = useAuth();
   const { showSuccess, showError } = useToast();
   const navigate = useNavigate();
@@ -42,6 +43,12 @@ const JobPage = () => {
   const databaseUser = useGetUser(user?.id);
   const createApplication = useCreateApplication();
   const userFiles = useGetFilesByUser(user?.id);
+  // Auto-open manual apply drawer if redirected with state
+  useEffect(() => {
+    if (location?.state?.openApply) {
+      setIsApplicationDrawerOpen(true);
+    }
+  }, [location?.state]);
   
   // Debug logging for data retrieval
   console.log('🔍 Job Page Debug:');

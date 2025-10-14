@@ -5,7 +5,7 @@ import { EmailLoginForm } from "../components/EmailLoginForm";
 import { EmailRegisterForm } from "../components/EmailRegisterForm";
 
 const SignUpPage = () => {
-  const [authMode, setAuthMode] = useState('social'); // 'social', 'email-login', 'email-register'
+  const [authMode, setAuthMode] = useState('email-register'); // 'social', 'email-login', 'email-register'
   
   // Load Facebook SDK
   useEffect(() => {
@@ -50,6 +50,7 @@ const SignUpPage = () => {
             onSuccess={() => setAuthMode('social')}
             onSwitchToLogin={() => setAuthMode('email-login')}
             onBackToSocial={() => setAuthMode('social')}
+            variant="dark"
           />
         );
       default:
@@ -94,14 +95,14 @@ const SignUpPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md p-4 flex items-center justify-center">
       <div className="max-w-md w-full space-y-8">
         {authMode === 'social' && (
           <div className="text-center">
-            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+            <h2 className="mt-6 text-3xl font-extrabold text-white">
               Create your account
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-200">
               Join CareerFlow and start your journey
             </p>
           </div>
@@ -111,13 +112,13 @@ const SignUpPage = () => {
 
         {authMode === 'social' && (
           <div className="text-center">
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-gray-300">
               By creating an account, you agree to our{" "}
-              <a href="#" className="text-purple-600 hover:text-purple-500">
+              <a href="#" className="text-blue-300 hover:text-blue-200">
                 Terms of Service
               </a>{" "}
               and{" "}
-              <a href="#" className="text-purple-600 hover:text-purple-500">
+              <a href="#" className="text-blue-300 hover:text-blue-200">
                 Privacy Policy
               </a>
             </p>

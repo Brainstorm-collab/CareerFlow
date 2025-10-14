@@ -22,7 +22,7 @@ import {
 
 const LandingJobCard = memo(({ job, isRecruiter = false, onJobDeleted }) => {
   const { user } = useAuth();
-  const { showSuccess, showError } = useToast();
+  const { showSuccess, showError, showWarning } = useToast();
   const navigate = useNavigate();
   const [isSaved, setIsSaved] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
@@ -242,21 +242,25 @@ const LandingJobCard = memo(({ job, isRecruiter = false, onJobDeleted }) => {
     }
 
     if (!databaseUser) {
-      showError('Please complete your profile first to use quick apply');
+      // Warn and redirect to manual apply flow
+      showWarning('Complete your profile to be eligible for Quick Apply. Redirecting to manual apply...', 5000);
+      navigate(`/job/${job._id}`, { state: { openApply: true } });
       return;
     }
 
     // Check if profile has required data including resume
     const hasRequiredData = databaseUser.firstName && databaseUser.email && databaseUser.phone && databaseUser.location && databaseUser.skills && databaseUser.skills.length > 0;
     if (!hasRequiredData) {
-      showError('Please complete your profile with required information (name, email, phone, location, skills) to use quick apply');
+      showWarning('Complete profile (name, email, phone, location, skills) to use Quick Apply. Redirecting to manual apply...', 6000);
+      navigate(`/job/${job._id}`, { state: { openApply: true } });
       return;
     }
 
     // Check if user has a resume (either URL or uploaded file)
     const hasResume = (databaseUser.resumeUrl && databaseUser.resumeUrl.startsWith('http')) || (userFiles && userFiles.length > 0 && userFiles.some(file => file.fileType.includes('pdf')));
     if (!hasResume) {
-      showError('Please upload a resume to your profile to use Quick Apply. Go to your profile page and upload a PDF resume.');
+      showWarning('Upload a resume (PDF) to your profile to use Quick Apply. Redirecting to manual apply...', 6000);
+      navigate(`/job/${job._id}`, { state: { openApply: true } });
       return;
     }
 
@@ -566,7 +570,7 @@ ${databaseUser.firstName || ''} ${databaseUser.lastName || ''}`;
                   </>
                 ) : (
                   <>
-                    <Briefcase size={16} />
+                    <Zap size={16} />
                     Apply Now
                   </>
                 )}

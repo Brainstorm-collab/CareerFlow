@@ -107,7 +107,7 @@ const JobListing = () => {
     }
     
     // Prefetch likely next routes
-    prefetchOnRouteChange('/job-listing');
+    prefetchOnRouteChange('/jobs');
   }, [jobs, savedJobsData, prefetchOnRouteChange]);
 
   // Loading and error states from Convex

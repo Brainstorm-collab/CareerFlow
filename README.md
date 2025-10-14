@@ -100,9 +100,9 @@ CareerFlow is a comprehensive job portal platform that bridges the gap between j
 - **File Storage** - Document and image management
 
 ### Authentication & Security
-- **Clerk** - User authentication and management
-- **JWT** - Token-based authentication
-- **Social Login** - Google OAuth integration
+- **Built-in AuthContext** - Lightweight local/session auth for demo use
+- **JWT (optional)** - For token-based flows if integrated later
+- **Social Login** - Google OAuth integration (demo)
 
 ### Development Tools
 - **ESLint** - Code linting and formatting
@@ -118,7 +118,6 @@ CareerFlow is a comprehensive job portal platform that bridges the gap between j
 - **Node.js** (v18 or higher)
 - **npm** or **yarn**
 - **Convex Account** - [Sign up here](https://convex.dev/)
-- **Clerk Account** - [Sign up here](https://clerk.com/)
 
 ### Installation
 
@@ -136,8 +135,9 @@ CareerFlow is a comprehensive job portal platform that bridges the gap between j
 3. **Environment Setup**
    Create a `.env.local` file in the root directory:
    ```env
-   VITE_CONVEX_DEPLOYMENT=your-convex-deployment-url
-   VITE_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
+   VITE_CONVEX_URL=your-convex-client-url
+   VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id (optional)
+   VITE_FACEBOOK_APP_ID=your-facebook-app-id (optional)
    ```
 
 4. **Convex Setup**
@@ -314,19 +314,13 @@ The application uses a comprehensive design system built on:
 
 ## 🔐 Authentication
 
-CareerFlow uses **Clerk** for authentication with support for:
-
-- **Email/Password**: Traditional authentication
-- **Social Login**: Google OAuth integration
-- **Session Management**: Secure token handling
-- **Role-based Access**: Candidate vs Recruiter permissions
-- **Protected Routes**: Automatic redirects for unauthorized access
+CareerFlow currently uses an internal `AuthContext` for simplified demo authentication (email/password and social via Google) stored in localStorage. No external auth provider is required.
 
 ### Authentication Flow
-1. User signs up/in through Clerk
+1. User signs up/in via `AuthContext`
 2. Profile creation/update in Convex database
 3. Role assignment (candidate/recruiter)
-4. Access to role-specific features
+4. Access to role-specific features via `ProtectedRoute`
 
 ---
 
@@ -364,8 +358,9 @@ CareerFlow uses **Clerk** for authentication with support for:
 
 ### Environment Variables
 ```env
-VITE_CONVEX_DEPLOYMENT=your-convex-deployment-url
-VITE_CLERK_PUBLISHABLE_KEY=your-clerk-publishable-key
+VITE_CONVEX_URL=your-convex-client-url
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id (optional)
+VITE_FACEBOOK_APP_ID=your-facebook-app-id (optional)
 ```
 
 ### Build Process
@@ -374,6 +369,17 @@ npm run build
 ```
 
 The build creates optimized production files in the `dist/` directory.
+
+---
+
+## ⚡ Performance Optimizations
+
+- Route-level code splitting with lazy-loaded pages and skeleton fallbacks
+- Virtualized job lists for smooth rendering at scale
+- Smart prefetching of likely next routes via `usePrefetch`
+- Service Worker caching for static assets with update prompts
+- Convex realtime queries/mutations for instant UI updates
+- Memoization and debounced inputs for heavy computations
 
 ---
 

@@ -47,12 +47,12 @@ const usePrefetch = () => {
           { route: '/my-applications', fn: () => import('@/api/apiApplication') },
           { route: '/profile', fn: () => import('@/api/apiUsers') }
         ],
-        '/job-listing': [
+        '/jobs': [
           { route: '/saved-jobs', fn: () => import('@/api/apiSavedJobs') },
           { route: '/my-applications', fn: () => import('@/api/apiApplication') }
         ],
         '/saved-jobs': [
-          { route: '/job-listing', fn: () => import('@/api/apiJobs') },
+          { route: '/jobs', fn: () => import('@/api/apiJobs') },
           { route: '/my-applications', fn: () => import('@/api/apiApplication') }
         ]
       };
