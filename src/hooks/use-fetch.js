@@ -1,22 +1,22 @@
-import { useSession } from "@clerk/clerk-react";
+import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
-import { getAuthenticatedSupabaseClient } from '../utils/supabase.js';
+// import { getAuthenticatedSupabaseClient } from '../utils/supabase.js'; // Removed - will use Convex
 
 const useFetch = (cb, options = {}) => {
   const [data, setData] = useState(undefined);
   const [loading, setLoading] = useState(null);
   const [error, setError] = useState(null);
 
-  const { session } = useSession();
+  const { user } = useAuth();
 
   const fn = async (...args) => {
     setLoading(true);
     setError(null);
 
     try {
-      // Get authenticated Supabase client with JWT token
-      const supabase = await getAuthenticatedSupabaseClient(session);
-      const response = await cb(supabase, options, ...args);
+      // TODO: Implement with Convex
+      console.log('useFetch called - will implement with Convex');
+      const response = await cb(null, options, ...args); // Pass null for now
       setData(response);
       setError(null);
     } catch (error) {

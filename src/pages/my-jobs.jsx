@@ -1,13 +1,15 @@
 import CreatedApplications from "@/components/created-applications";
 import CreatedJobs from "@/components/created-jobs";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "../context/AuthContext";
+import { useGetUser } from "@/api/apiUsers";
 import { BarLoader } from "react-spinners";
 import { Briefcase, User, Building2 } from "lucide-react";
 
 const MyJobs = () => {
-  const { user, isLoaded } = useUser();
+  const { user, isSignedIn } = useAuth();
+  const databaseUser = useGetUser(user?.id);
 
-  if (!isLoaded) {
+  if (!isSignedIn) {
     return (
       <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -20,7 +22,7 @@ const MyJobs = () => {
     );
   }
 
-  const isRecruiter = user?.unsafeMetadata?.role === "recruiter";
+  const isRecruiter = databaseUser?.role === "recruiter";
 
   return (
     <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">

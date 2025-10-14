@@ -12,15 +12,19 @@ import {
 import { Link } from "react-router-dom";
 
 import { deletePostedJob } from "@/utils/local-storage-service";
-import { useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import { useAuth } from "../context/AuthContext";
+import { useEffect, useState, useMemo, useCallback, memo } from "react";
 import { BarLoader } from "react-spinners";
 import { getJobApplicantsCount } from "@/utils/local-storage-service";
 import { useJobContext } from "@/context/JobContext";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useToast } from "@/context/ToastContext";
+import { useIsJobSaved, useToggleSaveJob } from "@/api/apiSavedJobs";
+import { useDeleteJob } from "@/api/apiJobs";
+import { useGetApplicationsByJob } from "@/api/apiApplication";
+import OptimizedCompanyLogo from "./ui/optimized-company-logo";
 
-const JobCard = ({
+const JobCard = memo(({
   job,
   savedInit = false,
   onJobAction = () => {},
@@ -28,40 +32,46 @@ const JobCard = ({
   isRecruiter = false,
 }) => {
 
-  const [applicantsCount, setApplicantsCount] = useState(0);
   const [loadingSave, setLoadingSave] = useState(false);
 
-  const { user } = useUser();
-  const { isJobSaved, isJobApplied, saveJob, removeSavedJob } = useJobContext();
+  const { user } = useAuth();
   const { showSuccess, showError } = useToast();
-  const saved = isJobSaved(job.id);
-  const applied = isJobApplied(job.id);
-
-  // Check if job is saved on component mount and get applicant count
-  useEffect(() => {
-    if (user && job) {
-      // Get real applicant count
-      const count = getJobApplicantsCount(job.id);
-      setApplicantsCount(count);
-    }
-  }, [user, job]);
+  
+  // Check if this is a sample job (doesn't exist in database)
+  const isSampleJob = job._id && job._id.startsWith('k1734x8k');
+  
+  // Use Convex hooks for saved jobs (only for real jobs)
+  const isJobSavedQuery = useIsJobSaved(user?.id, isSampleJob ? null : job._id);
+  const toggleSaveJob = useToggleSaveJob();
+  const deleteJobMutation = useDeleteJob();
+  
+  // Get real-time applicant count from Convex
+  const applications = useGetApplicationsByJob(isSampleJob ? null : job._id);
+  const applicantsCount = applications?.length || 0;
+  
+  const saved = savedInit || isJobSavedQuery;
+  const applied = false; // TODO: Implement application status check with Convex
 
   const handleSaveJob = async () => {
-    if (!user) return;
+    if (!user || !job._id || isSampleJob) return;
     
     setLoadingSave(true);
     try {
-      if (saved) {
-        // Remove saved job
-        removeSavedJob(job.id);
-        onJobAction();
-      } else {
-        // Save job with full job data
-        saveJob(job.id, job);
-        onJobAction();
+      const result = await toggleSaveJob({
+        socialId: user.id,
+        jobId: job._id
+      });
+      
+      if (result?.action === 'saved') {
+        showSuccess('Job saved successfully!');
+      } else if (result?.action === 'unsaved') {
+        showSuccess('Job removed from saved jobs');
       }
+      
+      onJobAction();
     } catch (error) {
       console.error('Error handling save job:', error);
+      showError('Failed to save/unsave job. Please try again.');
     } finally {
       setLoadingSave(false);
     }
@@ -78,20 +88,28 @@ const JobCard = ({
     if (!confirmed) return;
     
     try {
-      const result = deletePostedJob(job.id, user.id);
-          if (result.success) {
-      console.log('Job deleted successfully');
-      // Show success message
-      showSuccess(`Job "${job.title}" has been deleted successfully!`);
-      onJobAction(); // Refresh the jobs list
-    } else {
-      console.error('Failed to delete job:', result.message);
-      showError('Failed to delete job. Please try again.');
+      if (isSampleJob || !job._id) {
+        // For sample jobs or jobs without _id, use local storage
+        const result = deletePostedJob(job.id, user.id);
+        if (result.success) {
+          console.log('Job deleted successfully');
+          showSuccess(`Job "${job.title}" has been deleted successfully!`);
+          onJobAction(); // Refresh the jobs list
+        } else {
+          console.error('Failed to delete job:', result.message);
+          showError('Failed to delete job. Please try again.');
+        }
+      } else {
+        // For database jobs, use Convex mutation
+        await deleteJobMutation({ jobId: job._id });
+        console.log('Job deleted successfully from database');
+        showSuccess(`Job "${job.title}" has been deleted successfully!`);
+        onJobAction(); // Refresh the jobs list
+      }
+    } catch (error) {
+      console.error('Error deleting job:', error);
+      showError('Error deleting job. Please try again.');
     }
-  } catch (error) {
-    console.error('Error deleting job:', error);
-    showError('Error deleting job. Please try again.');
-  }
   };
 
   const handleStatusUpdate = (newStatus) => {
@@ -104,61 +122,60 @@ const JobCard = ({
     onJobAction();
   };
 
-  const getCompanyLogo = (company) => {
-    console.log('getCompanyLogo called with:', company);
-    console.log('getCompanyLogo - company type:', typeof company);
-    console.log('getCompanyLogo - company keys:', company ? Object.keys(company) : 'null');
-    
-    // Handle different company data structures
-    let companyName = '';
-    let companyLogo = null;
-    
-    if (typeof company === 'string') {
-      // Company is just a string (from API)
-      companyName = company;
-    } else if (company && typeof company === 'object') {
-      // Company is an object (from local storage or API)
-      companyName = company.name || company.company_name || '';
-      companyLogo = company.logo || company.logo_url || null;
-    }
-    
-    console.log('Extracted company name:', companyName);
-    console.log('Extracted company logo:', companyLogo);
-    
-    // If company has a custom logo, use it
-    if (companyLogo) {
-      console.log('Using custom logo:', companyLogo);
-      console.log('Custom logo type:', typeof companyLogo);
-      console.log('Custom logo length:', companyLogo?.length);
-      return companyLogo;
-    }
-    
-    // If no company name, return default
-    if (!companyName) {
-      console.log('No company name, using default logo');
-      return '/companies/default.svg';
-    }
-    
-    // Normalize company name for matching
-    const normalizedName = companyName.toLowerCase().trim();
-    console.log('Normalized company name:', normalizedName);
-    
-    const logoMap = {
-      'google': '/companies/google.webp',
-      'microsoft': '/companies/microsoft.webp',
-      'amazon': '/companies/amazon.svg',
-      'meta': '/companies/meta.svg',
-      'netflix': '/companies/netflix.png',
-      'uber': '/companies/uber.svg',
-      'atlassian': '/companies/atlassian.svg',
-      'ibm': '/companies/ibm.svg',
-      'apple': '/companies/apple.svg',
+  // OPTIMIZATION: Memoized company logo calculation
+  const getCompanyLogo = useMemo(() => {
+    return (company) => {
+      // First, try to use the actual company logo from database
+      if (company?.logoUrl) {
+        return company.logoUrl;
+      }
+      
+      // Handle different company data structures
+      let companyName = '';
+      
+      if (typeof company === 'string') {
+        companyName = company;
+      } else if (company && typeof company === 'object') {
+        companyName = company.name || company.company_name || '';
+      }
+      
+      // If no company name, return default
+      if (!companyName) {
+        return '/companies/default.svg';
+      }
+      
+      // Normalize company name for matching
+      const normalizedName = companyName.toLowerCase().trim();
+      
+      // Map company names to their logo files (fallback for companies without logoUrl)
+      const logoMap = {
+        'google': '/companies/google.webp',
+        'microsoft': '/companies/microsoft.webp',
+        'amazon': '/companies/amazon.svg',
+        'meta': '/companies/meta.svg',
+        'netflix': '/companies/netflix.png',
+        'uber': '/companies/uber.svg',
+        'atlassian': '/companies/atlassian.svg',
+        'ibm': '/companies/ibm.svg',
+        'apple': '/companies/apple.svg',
+        'facebook': '/companies/meta.svg',
+        'alphabet': '/companies/google.webp',
+        'techcorp inc': '/companies/microsoft.webp', // Using Microsoft logo for TechCorp
+        'techcorp': '/companies/microsoft.webp',
+        'test company': '/companies/google.webp', // Map Test Company to Google logo
+        'tesla': '/companies/apple.svg', // Using Apple logo for Tesla
+        'nvidia': '/companies/ibm.svg', // Using IBM logo for Nvidia
+        'salesforce': '/companies/amazon.svg', // Using Amazon logo for Salesforce
+        'adobe': '/companies/netflix.png', // Using Netflix logo for Adobe
+        'oracle': '/companies/uber.svg', // Using Uber logo for Oracle
+        'intel': '/companies/atlassian.svg', // Using Atlassian logo for Intel
+        'cisco': '/companies/google.webp', // Using Google logo for Cisco
+      };
+      
+      const logoPath = logoMap[normalizedName] || '/companies/default.svg';
+      return logoPath;
     };
-    
-    const logoPath = logoMap[normalizedName] || '/companies/default.svg';
-    console.log('Selected logo path:', logoPath);
-    return logoPath;
-  };
+  }, []);
 
   return (
     <Card className="group relative overflow-hidden bg-gradient-to-br from-gray-900/90 via-gray-800/90 to-gray-900/90 backdrop-blur-sm border border-gray-700/50 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 h-full flex flex-col transform hover:-translate-y-1">
@@ -170,18 +187,12 @@ const JobCard = ({
           </h2>
         </div>
 
-        {/* Company Logo - Elegant display */}
+        {/* Company Logo - Clean display without padding */}
         <div className="flex justify-center">
-          <div className="w-14 h-14 flex items-center justify-center bg-white/10 rounded-xl p-2 border border-white/20">
-            <img
-              src={getCompanyLogo(job.company)}
-              alt={job.company?.name || 'Company'}
-              className="w-full h-full object-contain"
-              onError={(e) => {
-                e.target.src = '/companies/default.svg';
-              }}
-            />
-          </div>
+          <OptimizedCompanyLogo
+            company={job.company}
+            className="w-28 h-28 object-contain"
+          />
         </div>
 
         {/* Company Name - Clean badge design */}
@@ -310,7 +321,7 @@ const JobCard = ({
       </CardContent>
       
       <CardFooter className="flex gap-3 pt-4 border-t border-gray-700/50 p-6 bg-gray-800/50">
-        <Link to={`/job/${job.id}`} className="flex-1">
+        <Link to={`/job/${job._id}`} className="flex-1">
           <Button 
             variant="secondary" 
             className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 transition-all duration-300 text-sm shadow-lg hover:shadow-blue-500/25"
@@ -319,8 +330,8 @@ const JobCard = ({
           </Button>
         </Link>
         
-        {/* Save Job Button - Only for candidates */}
-        {!isMyJob && !isRecruiter && (
+        {/* Save Job Button - Available for all users */}
+        {!isMyJob && !isSampleJob && (
           <Button
             variant="outline"
             size="icon"
@@ -340,11 +351,11 @@ const JobCard = ({
         
         {/* View Applicants Button - Only for recruiters */}
         {isRecruiter && (
-          <Link to={`/job/${job.id}/applicants`}>
+          <Link to={`/job/${job._id}/applicants`}>
             <Button
               variant="outline"
               size="icon"
-              className="border-blue-500/50 hover:bg-blue-500/20 text-blue-300 transition-all duration-300 hover:scale-110 hover:border-blue-400"
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white border-purple-500/50 hover:border-purple-400 transition-all duration-300 hover:scale-110 shadow-lg hover:shadow-purple-500/25"
               title="View Applicants"
             >
               <Users size={18} />
@@ -384,6 +395,15 @@ const JobCard = ({
       </CardFooter>
     </Card>
   );
-};
+}, (prevProps, nextProps) => {
+  // OPTIMIZATION: Custom comparison for better performance
+  return (
+    prevProps.job._id === nextProps.job._id &&
+    prevProps.isRecruiter === nextProps.isRecruiter &&
+    prevProps.isMyJob === nextProps.isMyJob &&
+    prevProps.job.company?.name === nextProps.job.company?.name &&
+    prevProps.job.title === nextProps.job.title
+  );
+});
 
 export default JobCard;

@@ -1,168 +1,89 @@
-import supabaseClient from "@/utils/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
-// Fetch Jobs
-export async function getJobs(token, { location, company_id, searchQuery }) {
-  const supabase = await supabaseClient(token);
-  let query = supabase
-    .from("jobs")
-    .select("*, saved: saved_jobs(id), company: companies(name,logo_url)");
+// Hook to get jobs with filtering
+export const useGetJobs = (filters = {}) => {
+  return useQuery(api.jobs.getJobs, filters);
+};
 
-  if (location) {
-    query = query.eq("location", location);
-  }
+// Hook to get a single job
+export const useGetJob = (jobId) => {
+  const shouldSkip = !jobId || jobId === "undefined";
+  return useQuery(api.jobs.getJob, shouldSkip ? "skip" : { jobId });
+};
 
-  if (company_id) {
-    query = query.eq("company_id", company_id);
-  }
+// Hook to get jobs by recruiter
+export const useGetJobsByRecruiter = (recruiterId) => {
+  return useQuery(api.jobs.getJobsByRecruiter, recruiterId ? { recruiterId } : "skip");
+};
 
-  if (searchQuery) {
-    query = query.ilike("title", `%${searchQuery}%`);
-  }
+// Hook to create a job
+export const useCreateJob = () => {
+  return useMutation(api.jobs.createJob);
+};
 
-  const { data, error } = await query;
+// Hook to update a job
+export const useUpdateJob = () => {
+  return useMutation(api.jobs.updateJob);
+};
 
-  if (error) {
-    console.error("Error fetching Jobs:", error);
-    return null;
-  }
+// Hook to delete a job
+export const useDeleteJob = () => {
+  return useMutation(api.jobs.deleteJob);
+};
 
-  return data;
+// Hook to create real jobs for testing
+export const useCreateRealJobs = () => {
+  return useMutation(api.jobs.createRealJobs);
+};
+
+// Hook to increment view count
+export const useIncrementViewCount = () => {
+  return useMutation(api.jobs.incrementViewCount);
+};
+
+// Legacy API functions for backward compatibility
+export async function getJobs(token, { location, company_id, searchQuery, job_type, experience_level, salary_min, remote_work, limit = 20, offset = 0 }) {
+  console.log('getJobs called - use useGetJobs hook instead');
+  return [];
 }
 
-// Read Saved Jobs
-export async function getSavedJobs(token) {
-  const supabase = await supabaseClient(token);
-  const { data, error } = await supabase
-    .from("saved_jobs")
-    .select("*, job: jobs(*, company: companies(name,logo_url))");
-
-  if (error) {
-    console.error("Error fetching Saved Jobs:", error);
-    return null;
-  }
-
-  return data;
-}
-
-// Read single job
 export async function getSingleJob(token, { job_id }) {
-  const supabase = await supabaseClient(token);
-  let query = supabase
-    .from("jobs")
-    .select(
-      "*, company: companies(name,logo_url), applications: applications(*)"
-    )
-    .eq("id", job_id)
-    .single();
-
-  const { data, error } = await query;
-
-  if (error) {
-    console.error("Error fetching Job:", error);
-    return null;
-  }
-
-  return data;
+  console.log('getSingleJob called - use useGetJob hook instead');
+  return null;
 }
 
-// - Add / Remove Saved Job
+export async function getSavedJobs(token) {
+  console.log('getSavedJobs called - use useGetSavedJobs hook instead');
+  return [];
+}
+
 export async function saveJob(token, { alreadySaved }, saveData) {
-  const supabase = await supabaseClient(token);
-
-  if (alreadySaved) {
-    // If the job is already saved, remove it
-    const { data, error: deleteError } = await supabase
-      .from("saved_jobs")
-      .delete()
-      .eq("job_id", saveData.job_id);
-
-    if (deleteError) {
-      console.error("Error removing saved job:", deleteError);
-      return data;
-    }
-
-    return data;
-  } else {
-    // If the job is not saved, add it to saved jobs
-    const { data, error: insertError } = await supabase
-      .from("saved_jobs")
-      .insert([saveData])
-      .select();
-
-    if (insertError) {
-      console.error("Error saving job:", insertError);
-      return data;
-    }
-
-    return data;
-  }
+  console.log('saveJob called - use useToggleSaveJob hook instead');
+  return { success: false };
 }
 
-// - job isOpen toggle - (recruiter_id = auth.uid())
-export async function updateHiringStatus(token, { job_id }, isOpen) {
-  const supabase = await supabaseClient(token);
-  const { data, error } = await supabase
-    .from("jobs")
-    .update({ isOpen })
-    .eq("id", job_id)
-    .select();
-
-  if (error) {
-    console.error("Error Updating Hiring Status:", error);
-    return null;
-  }
-
-  return data;
+export async function createJob(token, jobData) {
+  console.log('createJob called - use useCreateJob hook instead');
+  return { success: false };
 }
 
-// get my created jobs
-export async function getMyJobs(token, { recruiter_id }) {
-  const supabase = await supabaseClient(token);
-
-  const { data, error } = await supabase
-    .from("jobs")
-    .select("*, company: companies(name,logo_url)")
-    .eq("recruiter_id", recruiter_id);
-
-  if (error) {
-    console.error("Error fetching Jobs:", error);
-    return null;
-  }
-
-  return data;
+export async function updateJob(token, jobId, jobData) {
+  console.log('updateJob called - use useUpdateJob hook instead');
+  return { success: false };
 }
 
-// Delete job
-export async function deleteJob(token, { job_id }) {
-  const supabase = await supabaseClient(token);
-
-  const { data, error: deleteError } = await supabase
-    .from("jobs")
-    .delete()
-    .eq("id", job_id)
-    .select();
-
-  if (deleteError) {
-    console.error("Error deleting job:", deleteError);
-    return data;
-  }
-
-  return data;
+export async function deleteJob(token, jobId) {
+  console.log('deleteJob called - use useDeleteJob hook instead');
+  return { success: false };
 }
 
-// - post job
-export async function addNewJob(token, _, jobData) {
-  const supabase = await supabaseClient(token);
+export async function getMyJobs(token) {
+  console.log('getMyJobs called - use useGetJobsByRecruiter hook instead');
+  return [];
+}
 
-  const { data, error } = await supabase
-    .from("jobs")
-    .insert([jobData])
-    .select();
-
-  if (error) {
-    console.error(error);
-    throw new Error("Error Creating Job");
-  }
-
-  return data;
+export async function updateHiringStatus(token, jobId, status) {
+  console.log('updateHiringStatus called - use useUpdateJob hook instead');
+  return { success: false };
 }

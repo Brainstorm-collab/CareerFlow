@@ -35,19 +35,45 @@ const ContactPage = () => {
   };
 
   return (
-    <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 py-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        {/* Floating Blur Effects */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header Section */}
+      <div className="relative z-10 max-w-6xl mx-auto mb-12">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 flex items-center justify-center">
+              <MessageSquare size={24} className="text-blue-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">Contact Us</h1>
+          </div>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Get in touch with our team for support, questions, or feedback
+          </p>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <section className="text-center mb-16">
-        <h1 className="gradient-title font-extrabold text-4xl sm:text-6xl lg:text-7xl tracking-tighter mb-6">
+      <section className="text-center mb-16 relative z-10">
+        <h1 className="font-black text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-none px-2 break-words bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent mb-6">
           Get in Touch
         </h1>
-        <p className="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto">
+        <p className="text-gray-300 text-lg sm:text-xl max-w-3xl mx-auto leading-relaxed font-medium">
           Have questions about our platform? Need help with your account? 
           We're here to help you succeed in your career journey.
         </p>
       </section>
 
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-6xl mx-auto relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Contact Form */}
           <Card className="bg-black/20 backdrop-blur-sm border-white/10">

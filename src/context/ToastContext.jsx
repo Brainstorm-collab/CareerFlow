@@ -40,28 +40,52 @@ export const ToastProvider = ({ children }) => {
     return addToast({ message, type: "info", duration });
   }, [addToast]);
 
+  const success = useCallback((title, message, duration) => {
+    return addToast({ message: `${title}: ${message}`, type: "success", duration });
+  }, [addToast]);
+
+  const error = useCallback((title, message, duration) => {
+    return addToast({ message: `${title}: ${message}`, type: "error", duration });
+  }, [addToast]);
+
+  const successWithUser = useCallback((message, userName, description, duration) => {
+    const formattedMessage = message.replace('{userName}', userName);
+    return addToast({ message: `${formattedMessage} ${description}`, type: "success", duration });
+  }, [addToast]);
+
   const value = {
     addToast,
     removeToast,
     showSuccess,
     showError,
     showWarning,
-    showInfo
+    showInfo,
+    success,
+    error,
+    successWithUser
   };
 
   return (
     <ToastContext.Provider value={value}>
       {children}
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
-        {toasts.map((toast) => (
-          <Toast
+      <div className="fixed top-6 right-6 z-[9999] space-y-3 max-w-md">
+        {toasts.map((toast, index) => (
+          <div
             key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            duration={toast.duration}
-            onClose={() => removeToast(toast.id)}
-          />
+            className="transform transition-all duration-300 ease-out"
+            style={{
+              transform: `translateY(${index * 8}px)`,
+              zIndex: 9999 - index
+            }}
+          >
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              duration={toast.duration}
+              onClose={() => removeToast(toast.id)}
+            />
+          </div>
         ))}
       </div>
     </ToastContext.Provider>

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "../context/AuthContext";
 import { 
   getStorageStats, 
   clearAllData, 
@@ -23,7 +23,7 @@ import {
 import { useToast } from "@/context/ToastContext";
 
 const Demo = () => {
-  const { user, isLoaded } = useUser();
+  const { user, isSignedIn } = useAuth();
   const [stats, setStats] = useState({});
   const [savedJobs, setSavedJobs] = useState([]);
   const [postedJobs, setPostedJobs] = useState([]);
@@ -77,7 +77,7 @@ const Demo = () => {
     }
   };
 
-  if (!isLoaded) {
+  if (!user) {
     return (
       <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-center min-h-[60vh]">

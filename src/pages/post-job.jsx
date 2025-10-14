@@ -25,45 +25,55 @@ import {
   User,
   LogIn
 } from "lucide-react";
-import { useUser, SignedOut } from "@clerk/clerk-react";
+import { useAuth } from "@/context/AuthContext";
 import MDEditor from "@uiw/react-md-editor";
-import { Link, Navigate } from "react-router-dom";
-import { postJob } from "@/utils/local-storage-service";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useJobContext } from "@/context/JobContext";
 import { useToast } from "@/context/ToastContext";
+import { useCreateJob } from "@/api/apiJobs";
+import { useGetCompanies, useCreateCompany } from "@/api/apiCompanies";
+import { useGetUser } from "@/api/apiUsers";
+import { useGenerateUploadUrl, useUpdateFileUrl } from "@/api/apiFileStorage";
 
 const PostJob = () => {
   const [formData, setFormData] = useState({
     title: "",
     company: "",
     location: "",
-    job_type: "full-time",
-    experience_level: "entry",
-    remote_work: false,
-    salary_min: "",
-    salary_max: "",
+    jobType: "full-time",
+    experienceLevel: "entry",
+    remoteWork: false,
+    salaryMin: "",
+    salaryMax: "",
     description: "",
     requirements: "",
     benefits: [],
-    status: "open", // New: job status
-    company_logo: null // New: company logo file
+    status: "open",
+    company_logo: null
   });
   const [newBenefit, setNewBenefit] = useState("");
   const [showPreview, setSetShowPreview] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [logoPreview, setLogoPreview] = useState(null); // New: logo preview
-  const { user } = useUser();
+  const [logoPreview, setLogoPreview] = useState(null);
+  const { user, isSignedIn } = useAuth();
+  const databaseUser = useGetUser(user?.id);
+  const navigate = useNavigate();
+  
+  // Convex hooks
+  const createJob = useCreateJob();
+  const createCompany = useCreateCompany();
+  const companies = useGetCompanies({ limit: 100 });
+  const generateUploadUrl = useGenerateUploadUrl();
+  const updateFileUrl = useUpdateFileUrl();
   const { addNewJob } = useJobContext();
   const { showSuccess, showError } = useToast();
 
   // Debug information for development
   const debugInfo = {
     userId: user?.id,
-    userEmail: user?.primaryEmailAddress?.emailAddress,
-    userRole: user?.unsafeMetadata?.role,
-    hasUnsafeMetadata: !!user?.unsafeMetadata,
-    unsafeMetadataKeys: user?.unsafeMetadata ? Object.keys(user?.unsafeMetadata) : [],
+    userEmail: user?.email,
+    userRole: user?.role,
     isSignedIn: !!user,
     userObject: user
   };
@@ -77,13 +87,8 @@ const PostJob = () => {
   }
 
   // Check if user role is not set yet (needs onboarding)
-  if (!user?.unsafeMetadata?.role) {
+  if (!user?.role) {
     return <Navigate to="/onboarding" replace />;
-  }
-
-  // Check if user is a candidate (candidates cannot post jobs)
-  if (user?.unsafeMetadata?.role === "candidate") {
-    return <Navigate to="/unauthorized" replace />;
   }
 
   // Only recruiters can access the job posting form
@@ -190,69 +195,113 @@ const PostJob = () => {
     setLoading(true);
 
     try {
+      // First, find or create the company
+      let companyId;
+      const existingCompany = companies?.find(c => c.name.toLowerCase() === formData.company.toLowerCase());
+      
+      if (existingCompany) {
+        companyId = existingCompany._id;
+      } else {
+        // Create new company
+        if (!databaseUser?._id) {
+          throw new Error('User not found in database. Please try again.');
+        }
+        
+        let logoUrl = '/companies/default.svg';
+        
+        // Upload logo if provided
+        if (formData.company_logo) {
+          try {
+            // Generate upload URL with required parameters
+            const { uploadUrl, fileId } = await generateUploadUrl({
+              socialId: user.id,
+              fileName: formData.company_logo.name,
+              fileType: formData.company_logo.type,
+              fileSize: formData.company_logo.size,
+            });
+            
+            // Upload the file
+            const uploadResponse = await fetch(uploadUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': formData.company_logo.type },
+              body: formData.company_logo,
+            });
+            
+            if (!uploadResponse.ok) {
+              throw new Error('Failed to upload logo');
+            }
+            
+            const { storageId } = await uploadResponse.json();
+            
+            // Update file URL
+            const updateResult = await updateFileUrl({
+              fileId: fileId,
+              storageId: storageId,
+            });
+            
+            // Use the file URL from the update result
+            logoUrl = updateResult.fileUrl;
+          } catch (uploadError) {
+            console.error('Logo upload failed:', uploadError);
+            showError('Failed to upload logo. Using default logo.');
+          }
+        }
+        
+        companyId = await createCompany({
+          name: formData.company || 'Unknown Company',
+          description: `Company posting ${formData.title}`,
+          logoUrl: logoUrl,
+          createdBy: databaseUser._id
+        });
+      }
+
+      // Create the job
       const jobData = {
         title: formData.title,
         description: formData.description,
         requirements: formData.requirements,
         location: formData.location,
-        company: { 
-          name: formData.company || 'Unknown Company',
-          logo: logoPreview || null // Include logo preview if available
-        },
-        job_type: formData.job_type,
-        experience_level: formData.experience_level,
-        remote_work: formData.remote_work,
-        salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
-        salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
-        benefits: formData.benefits,
-        status: formData.status, // New: job status
-        isOpen: formData.status === 'open' // Only open jobs are visible to candidates
+        jobType: formData.jobType,
+        experienceLevel: formData.experienceLevel,
+        remoteWork: formData.remoteWork,
+        salaryMin: formData.salaryMin ? parseInt(formData.salaryMin) : undefined,
+        salaryMax: formData.salaryMax ? parseInt(formData.salaryMax) : undefined,
+        benefits: formData.benefits.join(', '),
+        skillsRequired: [], // TODO: Extract from requirements
+        recruiterId: user.id,
+        companyId: companyId
       };
 
-      console.log('About to post job with data:', jobData);
-      console.log('Logo preview available:', !!logoPreview);
-      console.log('Logo preview data:', logoPreview);
-      console.log('Company data:', jobData.company);
+      await createJob(jobData);
       
-      const result = postJob(jobData, user.id);
+      setSuccess(true);
+      showSuccess('Job posted successfully!');
       
-      if (result.success) {
-        console.log('Job posted successfully:', result.data);
-        console.log('Stored job data:', result.data);
-        
-        // Add the new job to the global jobs list for instant display
-        const newJob = {
-          id: result.data.id, // Use the ID from the postJob result
-          ...jobData,
-          created_at: new Date().toISOString(),
-          recruiter_id: user.id,
-          applicantsCount: 0 // Initialize applicant count
-        };
-        addNewJob(newJob);
-        
-        setSuccess(true);
-        setFormData({
-          title: "",
-          company: "",
-          location: "",
-          job_type: "full-time",
-          experience_level: "entry",
-          remote_work: false,
-          salary_min: "",
-          salary_max: "",
-          description: "",
-          requirements: "",
-          benefits: [],
-          status: "open", // New: job status
-          company_logo: null // New: company logo file
-        });
-        setLogoPreview(null);
-      } else {
-        throw new Error(result.message || 'Failed to post job');
-      }
+      // OPTIMIZATION: Faster redirect for better UX
+      setTimeout(() => {
+        navigate('/my-jobs');
+      }, 800); // Reduced from 1500ms to 800ms
+      
+      // Reset form
+      setFormData({
+        title: "",
+        company: "",
+        location: "",
+        jobType: "full-time",
+        experienceLevel: "entry",
+        remoteWork: false,
+        salaryMin: "",
+        salaryMax: "",
+        description: "",
+        requirements: "",
+        benefits: [],
+        status: "open",
+        company_logo: null
+      });
+      setLogoPreview(null);
     } catch (error) {
       console.error('Error posting job:', error);
-      showError('Failed to post job. Please try again.');
+      showError(error.message || 'Failed to post job. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -416,7 +465,7 @@ const PostJob = () => {
                   Job Status
                 </Label>
                 <Select value={formData.status} onValueChange={(value) => handleInputChange('status', value)}>
-                  <SelectTrigger className="bg-white/10 border-white/20 text-white w-full md:w-48">
+                  <SelectTrigger id="status" className="bg-white/10 border-white/20 text-white w-full md:w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-gray-900 border-white/20">
@@ -457,8 +506,8 @@ const PostJob = () => {
                     <Label htmlFor="job_type" className="text-sm font-medium text-gray-300 mb-2 block">
                       Job Type
                     </Label>
-                    <Select value={formData.job_type} onValueChange={(value) => handleInputChange('job_type', value)}>
-                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <Select value={formData.jobType} onValueChange={(value) => handleInputChange('jobType', value)}>
+                      <SelectTrigger id="job_type" className="bg-white/10 border-white/20 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-900 border-white/20">
@@ -472,8 +521,8 @@ const PostJob = () => {
                     <Label htmlFor="experience_level" className="text-sm font-medium text-gray-300 mb-2 block">
                       Experience Level
                     </Label>
-                    <Select value={formData.experience_level} onValueChange={(value) => handleInputChange('experience_level', value)}>
-                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <Select value={formData.experienceLevel} onValueChange={(value) => handleInputChange('experienceLevel', value)}>
+                      <SelectTrigger id="experience_level" className="bg-white/10 border-white/20 text-white">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-gray-900 border-white/20">
@@ -489,8 +538,8 @@ const PostJob = () => {
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="remote_work"
-                  checked={formData.remote_work}
-                  onCheckedChange={(checked) => handleInputChange('remote_work', checked)}
+                  checked={formData.remoteWork}
+                  onCheckedChange={(checked) => handleInputChange('remoteWork', checked)}
                   className="border-white/20 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
                 <Label htmlFor="remote_work" className="text-sm font-medium text-gray-300">
@@ -506,8 +555,8 @@ const PostJob = () => {
                   <Input
                     id="salary_min"
                     type="number"
-                    value={formData.salary_min}
-                    onChange={(e) => handleInputChange('salary_min', e.target.value)}
+                    value={formData.salaryMin}
+                    onChange={(e) => handleInputChange('salaryMin', e.target.value)}
                     placeholder="e.g., 500000"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/20 focus:border-blue-500"
                   />
@@ -519,8 +568,8 @@ const PostJob = () => {
                   <Input
                     id="salary_max"
                     type="number"
-                    value={formData.salary_max}
-                    onChange={(e) => handleInputChange('salary_max', e.target.value)}
+                    value={formData.salaryMax}
+                    onChange={(e) => handleInputChange('salaryMax', e.target.value)}
                     placeholder="e.g., 1500000"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-400 focus:bg-white/20 focus:border-blue-500"
                   />

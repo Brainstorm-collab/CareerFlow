@@ -1,243 +1,143 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import useDebounce from "@/hooks/use-debounce";
+import useRequestDeduplication from "@/hooks/use-request-deduplication";
+import usePrefetch from "@/hooks/use-prefetch";
+import useOptimisticUpdates from "@/hooks/use-optimistic-updates";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, MapPin, Building2, Briefcase, Clock, X, ChevronDown, ChevronUp, Database, AlertCircle, User, Lock } from "lucide-react";
+import { Search, Filter, MapPin, Building2, Briefcase, Clock, X, ChevronDown, ChevronUp, Database, AlertCircle, User, Lock, Users, TrendingUp } from "lucide-react";
 import LandingJobCard from "@/components/landing-job-card";
+import { LandingJobCardShimmer } from "@/components/ui/job-card-shimmer";
+import VirtualJobList from "@/components/ui/virtual-job-list";
 
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "@/context/AuthContext";
 import { useJobContext } from "@/context/JobContext";
+import { useGetJobs } from "@/api/apiJobs";
+import { useGetSavedJobs } from "@/api/apiSavedJobs";
+import { useGetUser } from "@/api/apiUsers";
+import { useGetCompanies } from "@/api/apiCompanies";
+import { sampleJobs } from "@/data/sampleJobs";
 
 const JobListing = () => {
-  const [jobs, setJobs] = useState([]);
   const [filteredJobs, setFilteredJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("all");
   const [selectedCompany, setSelectedCompany] = useState("all");
   const [selectedJobType, setSelectedJobType] = useState("all");
   const [selectedExperience, setSelectedExperience] = useState("all");
-
-
   const [showFilters, setShowFilters] = useState(false);
   const [savedJobs, setSavedJobs] = useState(new Set());
-  const { user } = useUser();
+  
+  // OPTIMIZATION: Progressive loading states
+  const [loadingState, setLoadingState] = useState('initial');
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  const { user } = useAuth();
   const { jobsList, getSavedJobsData } = useJobContext();
+  const databaseUser = useGetUser(user?.id);
+  
+  // OPTIMIZATION: Advanced performance hooks
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const { deduplicatedRequest } = useRequestDeduplication();
+  const { prefetchOnRouteChange } = usePrefetch();
+  const { data: optimisticJobs, updateRealData } = useOptimisticUpdates([]);
+  
+  // Use Convex hooks with debounced search
+  const filters = { 
+    limit: 50,
+    location: selectedLocation !== "all" ? selectedLocation : undefined,
+    companyName: selectedCompany !== "all" ? selectedCompany : undefined,
+    jobType: selectedJobType !== "all" ? selectedJobType : undefined,
+    experienceLevel: selectedExperience !== "all" ? selectedExperience : undefined,
+    searchQuery: debouncedSearchTerm || undefined
+  };
+  
+  const convexJobs = useGetJobs(filters);
 
-  const jobTypes = ["full-time", "part-time", "contract", "internship"];
-  const experienceLevels = ["entry", "mid", "senior", "lead"];
-  const locations = ["Mumbai, Maharashtra", "Delhi, NCR", "Bangalore, Karnataka", "Hyderabad, Telangana", "Chennai, Tamil Nadu", "Pune, Maharashtra", "Gurgaon, Haryana", "Noida, Uttar Pradesh", "Remote"];
-  const companies = ["Google", "Microsoft", "Amazon", "Meta", "Netflix", "Uber", "Atlassian", "IBM"];
-
-  // Initialize filteredJobs with jobs when jobs change
+  // OPTIMIZATION: Only fetch companies if needed for filtering
+  const databaseCompanies = useGetCompanies({ limit: 100 });
+  
+  // Use real jobs from database, fallback to sample jobs if none exist
+  const jobs = convexJobs && convexJobs.length > 0 ? convexJobs : sampleJobs;
+  
+  // Update optimistic data when real data changes
   useEffect(() => {
-    setFilteredJobs(jobs);
+    if (jobs) {
+      updateRealData(jobs);
+    }
+  }, [jobs, updateRealData]);
+  
+  // OPTIMIZATION: Removed debug logging for better performance
+  
+  
+  
+  // OPTIMIZATION: Only fetch saved jobs if user is logged in
+  const savedJobsData = useGetSavedJobs(user?.socialId || user?.id);
+
+  const jobTypes = ["full-time", "part-time", "contract", "internship", "freelance"];
+  const experienceLevels = ["entry", "mid", "senior", "lead"];
+  
+  // OPTIMIZATION: Memoize expensive computations
+  const locations = useMemo(() => {
+    return [...new Set(jobs?.map(job => job.location).filter(Boolean) || [])].sort();
   }, [jobs]);
 
+  const companies = useMemo(() => {
+    return [...new Set(jobs?.map(job => 
+      typeof job.company === 'string' ? job.company : job.company?.name
+    ).filter(Boolean) || [])].sort();
+  }, [jobs]);
+
+  // OPTIMIZATION: Combined useEffect with prefetching
   useEffect(() => {
-    fetchJobs();
-    if (user) {
-      fetchSavedJobs();
+    // Update filtered jobs when jobs change
+    if (jobs) {
+      setFilteredJobs(jobs);
     }
-  }, [user]);
-
-  // Filter jobs whenever jobs, search term, or filters change
-  useEffect(() => {
-    filterJobs();
-  }, [jobs, searchTerm, selectedLocation, selectedCompany, selectedJobType, selectedExperience]);
-
-  const fetchJobs = async () => {
-    try {
-      setError(null);
-      
-      // Import the local storage service functions
-      const { getAllJobs } = await import('@/utils/local-storage-service');
-      
-      // Get all jobs from local storage (including posted jobs and sample jobs)
-      const localJobs = getAllJobs();
-      
-      console.log('Fetched jobs from local storage:', localJobs);
-      console.log('Jobs from context:', jobsList);
-      
-      // Ensure we have sample jobs even if local storage is empty
-      if (!localJobs || localJobs.length === 0) {
-        // Sample fallback jobs if no jobs are found
-        const fallbackJobs = [
-          {
-            id: 'sample_1',
-            title: 'Senior Software Engineer',
-            description: 'We are looking for a Senior Software Engineer to join our team and help build scalable applications. You will work on cutting-edge technologies and collaborate with cross-functional teams.',
-            requirements: [
-              '5+ years of experience in software development',
-              'Strong knowledge of JavaScript, Python, or Java',
-              'Experience with cloud platforms (AWS, Azure, GCP)',
-              'Knowledge of microservices architecture',
-              'Bachelor\'s degree in Computer Science or related field'
-            ],
-            location: 'San Francisco, CA',
-            salary_min: 120000,
-            salary_max: 180000,
-            job_type: 'full-time',
-            experience_level: 'senior',
-            remote_work: true,
-            company: { name: 'Google' },
-            isOpen: true
-          },
-          {
-            id: 'sample_2',
-            title: 'Frontend Developer',
-            description: 'Join our frontend team to create beautiful and responsive user interfaces. You will work with modern frameworks and collaborate with designers to deliver exceptional user experiences.',
-            requirements: [
-              '3+ years of experience in frontend development',
-              'Proficiency in React, Vue, or Angular',
-              'Strong CSS and JavaScript skills',
-              'Experience with responsive design',
-              'Knowledge of modern build tools'
-            ],
-            location: 'New York, NY',
-            salary_min: 80000,
-            salary_max: 120000,
-            job_type: 'full-time',
-            experience_level: 'mid',
-            remote_work: false,
-            company: { name: 'Microsoft' },
-            isOpen: true
-          },
-          {
-            id: 'sample_3',
-            title: 'Data Scientist',
-            description: 'We are seeking a Data Scientist to analyze complex data sets and develop machine learning models. You will work on predictive analytics and help drive business decisions.',
-            requirements: [
-              '3+ years of experience in data science',
-              'Strong Python programming skills',
-              'Experience with machine learning libraries (scikit-learn, TensorFlow)',
-              'Knowledge of SQL and data visualization',
-              'Advanced degree in Statistics, Mathematics, or related field'
-            ],
-            location: 'Seattle, WA',
-            salary_min: 100000,
-            salary_max: 150000,
-            job_type: 'full-time',
-            experience_level: 'mid',
-            remote_work: true,
-            company: { name: 'Amazon' },
-            isOpen: true
-          },
-          {
-            id: 'sample_4',
-            title: 'Product Manager',
-            description: 'Lead product strategy and development for our platform. You will work closely with engineering, design, and business teams to deliver innovative solutions.',
-            requirements: [
-              '4+ years of product management experience',
-              'Strong analytical and problem-solving skills',
-              'Experience with agile methodologies',
-              'Excellent communication and leadership skills',
-              'Technical background preferred'
-            ],
-            location: 'Menlo Park, CA',
-            salary_min: 130000,
-            salary_max: 200000,
-            job_type: 'full-time',
-            experience_level: 'senior',
-            remote_work: true,
-            company: { name: 'Meta' },
-            isOpen: true
-          },
-          {
-            id: 'sample_5',
-            title: 'DevOps Engineer',
-            description: 'Build and maintain our cloud infrastructure and deployment pipelines. You will ensure high availability and scalability of our systems.',
-            requirements: [
-              '3+ years of DevOps experience',
-              'Experience with AWS, Docker, and Kubernetes',
-              'Knowledge of CI/CD pipelines',
-              'Strong scripting skills (Python, Bash)',
-              'Experience with monitoring and logging tools'
-            ],
-            location: 'Los Gatos, CA',
-            salary_min: 110000,
-            salary_max: 160000,
-            job_type: 'full-time',
-            experience_level: 'mid',
-            remote_work: true,
-            company: { name: 'Netflix' },
-            isOpen: true
-          },
-          {
-            id: 'sample_6',
-            title: 'UX Designer',
-            description: 'Create intuitive and beautiful user experiences for our products. You will conduct user research and design user interfaces that delight our customers.',
-            requirements: [
-              '4+ years of UX design experience',
-              'Proficiency in design tools (Figma, Sketch)',
-              'Experience with user research and testing',
-              'Strong portfolio showcasing design work',
-              'Knowledge of design systems and accessibility'
-            ],
-            location: 'Cupertino, CA',
-            salary_min: 140000,
-            salary_max: 190000,
-            job_type: 'full-time',
-            experience_level: 'senior',
-            remote_work: false,
-            company: { name: 'Apple' },
-            isOpen: true
-          }
-        ];
-        setJobs(fallbackJobs);
-        return;
-      }
-      
-      // Combine local storage jobs with in-memory jobs from context
-      const combinedJobs = [...localJobs, ...jobsList];
-      
-      console.log('Combined jobs:', combinedJobs);
-      
-      // Filter to only show open jobs for candidates
-      const openJobs = combinedJobs.filter(job => job.isOpen !== false);
-      
-      console.log('Open jobs:', openJobs);
-      
-      setJobs(openJobs);
-    } catch (error) {
-      console.error('Error fetching jobs:', error);
-      setError('Failed to load jobs. Please try refreshing the page.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchSavedJobs = async () => {
-    try {
-      // Use the JobContext to get saved jobs
-      const savedJobsData = getSavedJobsData();
-      const savedJobIds = new Set(savedJobsData.map(job => job.id));
+    
+    // Update saved jobs when data changes
+    if (savedJobsData) {
+      const savedJobIds = new Set(savedJobsData.map(savedJob => savedJob.jobId));
       setSavedJobs(savedJobIds);
-    } catch (error) {
-      console.error('Error fetching saved jobs:', error);
     }
-  };
+    
+    // Prefetch likely next routes
+    prefetchOnRouteChange('/job-listing');
+  }, [jobs, savedJobsData, prefetchOnRouteChange]);
 
-  const filterJobs = () => {
-    let filtered = jobs.filter(job => {
-      const matchesSearch = job.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (job.description && job.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                           (job.company?.name && job.company.name.toLowerCase().includes(searchTerm.toLowerCase()));
-      
-      const matchesLocation = selectedLocation === "all" || !selectedLocation || job.location === selectedLocation;
-      const matchesCompany = selectedCompany === "all" || !selectedCompany || job.company?.name === selectedCompany;
-      const matchesJobType = selectedJobType === "all" || !selectedJobType || job.job_type === selectedJobType;
-      const matchesExperience = selectedExperience === "all" || !selectedExperience || job.experience_level === selectedExperience;
+  // Loading and error states from Convex
+  const loading = jobs === undefined;
+  const error = null; // Convex handles errors internally
+  
+  // OPTIMIZATION: Simplified progressive loading
+  useEffect(() => {
+    if (loading) {
+      const progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          if (prev < 30) {
+            setLoadingState('initial');
+            return prev + 15;
+          } else if (prev < 70) {
+            setLoadingState('fetching');
+            return prev + 20;
+          } else {
+            setLoadingState('processing');
+            return prev + 10;
+          }
+        });
+      }, 150); // Faster progress updates
 
-      return matchesSearch && matchesLocation && matchesCompany && matchesJobType && matchesExperience;
-    });
-
-    setFilteredJobs(filtered);
-  };
+      return () => clearInterval(progressInterval);
+    } else {
+      setLoadingProgress(100);
+      setLoadingState('complete');
+    }
+  }, [loading]);
 
   const clearFilters = () => {
     setSearchTerm("");
@@ -248,13 +148,15 @@ const JobListing = () => {
   };
 
   const handleJobAction = () => {
-    fetchSavedJobs();
+    // Saved jobs will update automatically via Convex
   };
 
-  const featuredJobs = filteredJobs.slice(0, 3);
-  const regularJobs = filteredJobs.slice(3);
+  // OPTIMIZATION: Use virtual job list for better performance
+  const handleJobDeleted = () => {
+    // Jobs will update automatically via Convex
+  };
 
-  // Show error state
+  // Show error state (if any)
   if (error) {
     return (
       <main className="min-h-screen py-20 px-4 sm:px-6 lg:px-8">
@@ -268,16 +170,6 @@ const JobListing = () => {
               <p className="text-gray-300 mb-8 text-lg">
                 {error}
               </p>
-              <div className="space-y-4">
-                <Button 
-                  onClick={fetchJobs} 
-                  variant="outline" 
-                  className="border-gray-600 hover:bg-gray-700/50 text-gray-200 bg-gray-800/50 transition-all duration-300 px-6 py-3"
-                >
-                  <Database size={18} className="mr-2" />
-                  Try Again
-                </Button>
-              </div>
             </CardContent>
           </Card>
         </div>
@@ -285,43 +177,178 @@ const JobListing = () => {
     );
   }
 
+  // OPTIMIZATION: Enhanced loading states with informative messages
+  const LoadingStates = {
+    initial: {
+      message: "Discovering amazing opportunities...",
+      subMessage: "Finding the best jobs for you"
+    },
+    fetching: {
+      message: "Loading job details...",
+      subMessage: "Getting company information and requirements"
+    },
+    processing: {
+      message: "Almost ready...",
+      subMessage: "Preparing your personalized job recommendations"
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-32 w-32 border-4 border-gray-700 border-t-blue-500 mx-auto"></div>
-            <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
-          </div>
-          <p className="text-white mt-6 text-xl font-medium">Loading amazing opportunities...</p>
-          <p className="text-gray-400 mt-2">Please wait while we fetch the latest jobs</p>
+      <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 py-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+        {/* Background Effects */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
         </div>
-      </div>
+
+        <div className="flex items-center justify-center min-h-screen relative z-10">
+          <div className="text-center">
+            {/* Enhanced loading animation */}
+            <div className="relative mb-8">
+              <div className="animate-spin rounded-full h-32 w-32 border-4 border-gray-700 border-t-blue-500 mx-auto"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-transparent border-t-purple-500 animate-spin" 
+                   style={{ animationDirection: 'reverse', animationDuration: '1.5s' }}></div>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="w-64 bg-gray-700 rounded-full h-2 mx-auto mb-4">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${loadingProgress}%` }}
+              ></div>
+            </div>
+            
+            {/* Informative messages */}
+            <p className="text-white mt-6 text-xl font-medium">
+              {LoadingStates[loadingState].message}
+            </p>
+            <p className="text-gray-400 mt-2">
+              {LoadingStates[loadingState].subMessage}
+            </p>
+            
+            {/* Shimmer preview */}
+            <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <LandingJobCardShimmer key={i} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </main>
     );
   }
 
-  // Check if user is a recruiter
-  const isRecruiter = user?.unsafeMetadata?.role === "recruiter";
+  // Check if user is a recruiter (recruiters can only post jobs, not apply to them)
+  const isRecruiter = databaseUser?.role === "recruiter";
+  const isCandidate = databaseUser?.role === "candidate";
 
   return (
-    <main className="min-h-screen py-2 px-4 sm:px-6 lg:px-8">
-      {/* Hero Section */}
-      <section className="text-center mb-8">
-        <div className="relative">
-          {/* Background Elements */}
-          <div className="absolute inset-0 -z-10">
-            <div className="absolute top-10 left-10 w-24 h-24 bg-blue-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute top-20 right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl"></div>
-            <div className="absolute bottom-10 left-1/2 w-20 h-20 bg-green-500/10 rounded-full blur-3xl"></div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 py-8 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        {/* Floating Blur Effects */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header Section */}
+      <div className="relative z-10 max-w-6xl mx-auto mb-12">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 flex items-center justify-center">
+              <Briefcase size={24} className="text-blue-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">Latest Jobs</h1>
           </div>
-          
-          <h1 className="gradient-title font-extrabold text-4xl sm:text-6xl lg:text-7xl tracking-tighter mb-4">
-            Latest Jobs
-          </h1>
-          <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto px-4">
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             Discover amazing opportunities and find your next career move
           </p>
         </div>
+      </div>
+
+      {/* Manage Jobs Section - Only for Recruiters */}
+      {isRecruiter && (
+        <div className="relative z-10 max-w-6xl mx-auto mb-8">
+          <Card className="bg-gradient-to-r from-blue-600/20 to-purple-700/20 backdrop-blur-sm border-blue-500/30">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                    <Building2 size={20} className="text-blue-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-bold text-white">Manage Your Jobs</h2>
+                    <p className="text-gray-300 text-sm">Post, edit, and manage your job listings</p>
+                  </div>
+                </div>
+                <Link to="/post-job">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                    <Briefcase size={16} className="mr-2" />
+                    Post New Job
+                  </Button>
+                </Link>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link to="/my-jobs" className="block">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                        <Briefcase size={16} className="text-green-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold text-sm">My Jobs</h3>
+                        <p className="text-gray-400 text-xs">View all your posted jobs</p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                
+                <Link to="/job-applicants" className="block">
+                  <div className="bg-white/5 rounded-lg p-4 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <Users size={16} className="text-purple-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-white font-semibold text-sm">All Applicants</h3>
+                        <p className="text-gray-400 text-xs">Manage all applications</p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+                
+                <div className="bg-white/5 rounded-lg p-4 border border-white/10">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-yellow-500/20 flex items-center justify-center">
+                      <TrendingUp size={16} className="text-yellow-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-white font-semibold text-sm">Analytics</h3>
+                      <p className="text-gray-400 text-xs">Job performance metrics</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Hero Section */}
+      <section className="text-center mb-8 relative z-10">
+        <h1 className="font-black text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-none px-2 break-words bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent mb-6">
+          Latest Jobs
+        </h1>
+        <p className="text-gray-300 text-lg sm:text-xl max-w-2xl mx-auto leading-relaxed font-medium px-4">
+          Discover amazing opportunities and find your next career move
+        </p>
         
         {/* Recruiter Notice */}
         {isRecruiter && (
@@ -340,7 +367,7 @@ const JobListing = () => {
       </section>
 
       {/* Search and Filters Section */}
-      <div className="mb-8 space-y-4">
+      <div className="mb-8 space-y-4 relative z-10 max-w-6xl mx-auto">
         {/* Search Bar */}
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
@@ -459,60 +486,16 @@ const JobListing = () => {
       </div>
 
 
-      {/* Featured Jobs - Enhanced design */}
-      {featuredJobs.length > 0 && (
-        <section className="max-w-7xl mx-auto mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-2 h-10 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500 rounded-full"></div>
-            <div>
-              <h2 className="text-3xl font-bold text-white">Featured Opportunities</h2>
-              <p className="text-gray-400 text-sm">Hand-picked jobs for you</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {featuredJobs.map((job) => (
-              <div key={job.id} className="relative group">
-                <div className="absolute -top-3 -right-3 z-10">
-                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white text-xs font-bold px-3 py-1 shadow-lg">
-                    ⭐ Featured
-                  </Badge>
-                </div>
-                <div className="transform group-hover:scale-105 transition-transform duration-300">
-                  <LandingJobCard
-                    job={job}
-                    isRecruiter={isRecruiter}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* All Jobs - Enhanced design */}
-      {regularJobs.length > 0 && (
-        <section className="max-w-7xl mx-auto">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-2 h-10 bg-gradient-to-b from-green-500 via-blue-500 to-purple-500 rounded-full"></div>
-            <div>
-              <h2 className="text-3xl font-bold text-white">All Opportunities</h2>
-              <p className="text-gray-400 text-sm">Explore all available positions</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {regularJobs.map((job) => (
-              <LandingJobCard
-                key={job.id}
-                job={job}
-                isRecruiter={isRecruiter}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* OPTIMIZATION: Use Virtual Job List for better performance */}
+      <VirtualJobList 
+        jobs={filteredJobs}
+        isRecruiter={isRecruiter}
+        onJobDeleted={handleJobDeleted}
+        itemsPerPage={12}
+      />
 
       {/* No Results */}
-      {filteredJobs.length === 0 && jobs.length > 0 && (
+      {filteredJobs.length === 0 && jobs && jobs.length > 0 && (
         <section className="max-w-6xl mx-auto text-center py-20">
           <div className="relative">
             <div className="absolute inset-0 -z-10">
@@ -538,7 +521,7 @@ const JobListing = () => {
       )}
 
       {/* No Jobs Available */}
-      {jobs.length === 0 && !loading && !error && (
+      {(!jobs || jobs.length === 0) && !loading && !error && (
         <section className="max-w-6xl mx-auto text-center py-20">
           <div className="relative">
             <div className="absolute inset-0 -z-10">

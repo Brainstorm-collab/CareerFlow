@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 import { Navigate, useLocation } from "react-router-dom";
-import { useUser } from "@clerk/clerk-react";
+import { useAuth } from "../context/AuthContext";
 
 const ProtectedRoute = ({ children }) => {
-  const { isSignedIn, isLoaded, user } = useUser();
+  const { isSignedIn, isLoading, user } = useAuth();
   const { pathname } = useLocation();
 
-  // Show loading state while Clerk is initializing
-  if (!isLoaded) {
+  // Show loading state while auth is initializing
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children }) => {
   // Redirect to onboarding if user doesn't have a role
   if (
     user !== undefined &&
-    !user?.unsafeMetadata?.role &&
+    !user?.role &&
     pathname !== "/onboarding"
   ) {
     return <Navigate to="/onboarding" replace />;

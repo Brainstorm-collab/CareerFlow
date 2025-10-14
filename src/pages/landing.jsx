@@ -17,24 +17,18 @@ import {
 import { Link } from "react-router-dom";
 import { Users, Building2, ArrowRight, Star, Briefcase, MapPin, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
+import LandingJobCard from "@/components/landing-job-card";
+import { useAuth } from "../context/AuthContext";
+import { useGetUser } from "@/api/apiUsers";
 
 const LandingPage = () => {
   const [sampleJobs, setSampleJobs] = useState([]);
+  const { user } = useAuth();
+  const databaseUser = useGetUser(user?.id);
+  
+  // Check if user is a recruiter
+  const isRecruiter = databaseUser?.role === "recruiter";
 
-  // Function to get the correct company logo path
-  const getCompanyLogoPath = (companyName) => {
-    const name = companyName.toLowerCase();
-    if (name === 'google') return '/companies/google.webp';
-    if (name === 'microsoft') return '/companies/microsoft.webp';
-    if (name === 'amazon') return '/companies/amazon.svg';
-    if (name === 'meta') return '/companies/meta.svg';
-    if (name === 'apple') return '/companies/apple.svg';
-    if (name === 'netflix') return '/companies/netflix.png';
-    if (name === 'uber') return '/companies/uber.svg';
-    if (name === 'ibm') return '/companies/ibm.svg';
-    if (name === 'atlassian') return '/companies/atlassian.svg';
-    return '/companies/default.svg';
-  };
 
   useEffect(() => {
     // Sample jobs for the landing page
@@ -116,91 +110,106 @@ const LandingPage = () => {
   }, []);
 
   return (
-    <main className="flex flex-col gap-4 sm:gap-8 py-2 sm:py-4">
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex flex-col gap-4 sm:gap-8 py-8 overflow-x-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
+        
+        {/* Floating Blur Effects */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
+      </div>
+
+      {/* Header Section */}
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 flex items-center justify-center">
+              <Briefcase size={24} className="text-blue-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">Welcome to CareerFlow</h1>
+          </div>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Your gateway to amazing career opportunities worldwide
+          </p>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <section className="text-center relative px-4">
-        {/* Background Elements */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-40 right-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-1/2 w-24 h-24 bg-green-500/10 rounded-full blur-3xl"></div>
-        </div>
-        
-        {/* Logo */}
-        <div className="flex justify-center mb-4">
-          <img 
-            src="/newlogo.png" 
-            alt="CareerFlow Logo" 
-            className="w-56 h-56 sm:w-64 sm:h-64 lg:w-80 lg:h-80 xl:w-96 xl:h-96 object-contain"
-          />
-        </div>
-        
-        {/* Main Title Section */}
-        <div className="space-y-6 sm:space-y-8 max-w-full overflow-hidden">
-          {/* Main Title with Enhanced Styling */}
-          <div className="relative max-w-full">
-            <h1 className="gradient-title font-black text-5xl sm:text-6xl lg:text-7xl xl:text-8xl 2xl:text-9xl tracking-tight leading-none px-2 break-words">
-              CAREERFLOW
-            </h1>
-            {/* Enhanced glow effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/30 via-purple-500/30 to-green-500/30 blur-3xl -z-10"></div>
-            {/* Additional glow layers */}
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-green-600/20 blur-2xl -z-20"></div>
+      <section className="relative z-10">
+        <div className="max-w-7xl mx-auto">
+          {/* Logo positioned in the gap between header and main content */}
+          <div className="flex justify-center">
+            <img 
+              src="/newlogo.png" 
+              alt="CareerFlow Logo" 
+              className="w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64 xl:w-72 xl:h-72 object-contain"
+            />
           </div>
           
-          {/* Modern Caption Design */}
-          <div className="space-y-4">
-            {/* Main Caption with enhanced styling */}
-            <div className="relative max-w-full">
-              <div className="bg-gradient-to-r from-gray-100 via-gray-200 to-gray-300 bg-clip-text text-transparent">
-                <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl max-w-full px-4 font-black leading-tight break-words">
-                  WHERE CAREERS FLOW FORWARD
-                </p>
+          <div className="text-center">
+            {/* Main Title Section */}
+            <div className="max-w-4xl mx-auto">
+              {/* Main Title with Enhanced Styling */}
+              <div className="relative">
+                <h1 className="font-black text-5xl sm:text-6xl lg:text-7xl xl:text-8xl tracking-tight leading-none px-2 break-words bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
+                  CAREERFLOW
+                </h1>
               </div>
-              <div className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
-                <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl max-w-full px-4 font-bold leading-tight break-words">
-                  ACROSS THE GLOBE
-                </p>
-              </div>
-            </div>
-            
-            {/* Enhanced Subtitle with better styling */}
-            <div className="max-w-full px-4 overflow-hidden">
-              <p className="text-gray-300 text-base sm:text-lg lg:text-xl leading-relaxed font-medium text-center break-words">
-                Discover your dream job or find the perfect candidate. Let your career journey begin with 
-                <span className="text-blue-400 font-bold"> CAREERFLOW</span>.
-              </p>
-            </div>
-            
-            {/* Enhanced Stats Section */}
-            <div className="flex flex-wrap justify-center gap-6 sm:gap-8 mt-6 max-w-full overflow-hidden">
-              <div className="text-center group hover:scale-110 transition-transform duration-300">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-blue-400 group-hover:text-blue-300 transition-colors">1000+</div>
-                <div className="text-gray-400 text-sm font-medium">Jobs Posted</div>
-              </div>
-              <div className="text-center group hover:scale-110 transition-transform duration-300">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-purple-400 group-hover:text-purple-300 transition-colors">500+</div>
-                <div className="text-gray-400 text-sm font-medium">Companies</div>
-              </div>
-              <div className="text-center group hover:scale-110 transition-transform duration-300">
-                <div className="text-2xl sm:text-3xl lg:text-4xl font-black text-green-400 group-hover:text-green-300 transition-colors">50K+</div>
-                <div className="text-gray-400 text-sm font-medium">Candidates</div>
-              </div>
-            </div>
-            
-            {/* Additional Feature Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-full px-4 mt-6 overflow-hidden">
-              <div className="text-center p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all duration-300">
-                <div className="text-blue-400 text-2xl mb-2">🚀</div>
-                <div className="text-white font-semibold text-sm">Fast & Easy</div>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 hover:border-purple-500/30 transition-all duration-300">
-                <div className="text-purple-400 text-2xl mb-2">🔒</div>
-                <div className="text-white font-semibold text-sm">Secure Platform</div>
-              </div>
-              <div className="text-center p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-white/10 hover:border-green-500/30 transition-all duration-300">
-                <div className="text-green-400 text-2xl mb-2">🌍</div>
-                <div className="text-white font-semibold text-sm">Global Reach</div>
+              
+              {/* Modern Caption Design */}
+              <div>
+                {/* Main Caption with enhanced styling */}
+                <div className="relative">
+                  <p className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold leading-tight break-words text-gray-300">
+                    Where Careers Flow Forward
+                  </p>
+                  <p className="text-lg sm:text-xl lg:text-2xl xl:text-3xl font-semibold leading-tight break-words text-gray-400">
+                    Across the Globe
+                  </p>
+                </div>
+                
+                {/* Enhanced Subtitle with better styling */}
+                <div className="max-w-3xl mx-auto">
+                  <p className="text-gray-300 text-lg sm:text-xl leading-relaxed font-medium">
+                    Discover your dream job or find the perfect candidate. Let your career journey begin with 
+                    <span className="text-blue-400 font-bold"> CareerFlow</span>.
+                  </p>
+                </div>
+                
+                {/* Enhanced Stats Section */}
+                <div className="flex flex-wrap justify-center gap-8 sm:gap-12 mt-8">
+                  <div className="text-center group hover:scale-110 transition-transform duration-300">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-blue-400 group-hover:text-blue-300 transition-colors">1000+</div>
+                    <div className="text-gray-400 text-sm font-medium">Jobs Posted</div>
+                  </div>
+                  <div className="text-center group hover:scale-110 transition-transform duration-300">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-purple-400 group-hover:text-purple-300 transition-colors">500+</div>
+                    <div className="text-gray-400 text-sm font-medium">Companies</div>
+                  </div>
+                  <div className="text-center group hover:scale-110 transition-transform duration-300">
+                    <div className="text-3xl sm:text-4xl lg:text-5xl font-black text-green-400 group-hover:text-green-300 transition-colors">50K+</div>
+                    <div className="text-gray-400 text-sm font-medium">Candidates</div>
+                  </div>
+                </div>
+                
+                {/* Additional Feature Highlights */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-4xl mx-auto mt-8">
+                  <div className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all duration-300">
+                    <div className="text-blue-400 text-3xl mb-3">🚀</div>
+                    <div className="text-white font-semibold">Fast & Easy</div>
+                  </div>
+                  <div className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-purple-500/30 transition-all duration-300">
+                    <div className="text-purple-400 text-3xl mb-3">🔒</div>
+                    <div className="text-white font-semibold">Secure Platform</div>
+                  </div>
+                  <div className="text-center p-6 rounded-xl bg-white/5 backdrop-blur-sm border border-white/10 hover:border-green-500/30 transition-all duration-300">
+                    <div className="text-green-400 text-3xl mb-3">🌍</div>
+                    <div className="text-white font-semibold">Global Reach</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -208,7 +217,7 @@ const LandingPage = () => {
       </section>
       
       {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4">
+      <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center px-4 relative z-10">
         <Link to={"/jobs"} className="w-full sm:w-auto">
           <Button 
             variant="blue" 
@@ -232,7 +241,7 @@ const LandingPage = () => {
       </div>
       
       {/* Companies Carousel */}
-      <section className="relative">
+      <section className="relative z-10">
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-1/2 left-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
           <div className="absolute top-1/2 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-3xl"></div>
@@ -263,13 +272,13 @@ const LandingPage = () => {
       </section>
 
       {/* Banner Image */}
-      <div className="relative">
+      <div className="relative z-10">
         <img src="/banner.jpeg" className="w-full rounded-2xl shadow-2xl" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent rounded-2xl"></div>
       </div>
 
       {/* Features Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 px-4">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 px-4 relative z-10">
         <Card className="bg-gradient-to-br from-black/20 via-black/15 to-black/20 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all duration-300 group">
           <CardHeader className="pb-3">
             <CardTitle className="font-bold text-white flex items-center gap-2 group-hover:text-blue-400 transition-colors text-lg sm:text-xl">
@@ -308,7 +317,7 @@ const LandingPage = () => {
       </section>
 
       {/* Sample Jobs Section */}
-      <section className="relative px-4">
+      <section className="relative px-4 z-10">
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-0 left-1/4 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-purple-500/5 rounded-full blur-3xl"></div>
@@ -321,101 +330,17 @@ const LandingPage = () => {
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 max-w-6xl mx-auto">
           {sampleJobs.map((job) => (
-            <Card key={job.id} className="bg-black/70 backdrop-blur-sm border border-white/20 hover:border-blue-500/50 transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/20 transform hover:-translate-y-1">
-              <CardContent className="p-4 sm:p-6">
-                {/* Job Title */}
-                <div className="text-center mb-4">
-                  <h3 className="text-lg sm:text-xl font-bold text-white leading-tight">
-                    {job.title}
-                  </h3>
-                </div>
-
-                {/* Company Logo and Name */}
-                <div className="flex items-center justify-center gap-3 mb-4">
-                  <img 
-                    src={getCompanyLogoPath(job.company.name)} 
-                    alt={`${job.company.name} logo`}
-                    className="w-8 h-8 sm:w-10 sm:h-10 object-contain"
-                    onError={(e) => {
-                      e.target.src = '/companies/default.svg';
-                    }}
-                  />
-                  <span className="text-white font-medium text-sm sm:text-base">{job.company.name}</span>
-                </div>
-
-                {/* Job Description */}
-                <div className="text-center mb-4">
-                  <p className="text-gray-300 text-sm leading-relaxed">
-                    {job.description}
-                  </p>
-                </div>
-
-                {/* Location */}
-                <div className="flex items-center justify-center gap-2 text-gray-300 text-sm mb-4">
-                  <MapPin size={14} className="text-blue-400" />
-                  <span className="text-gray-200">{job.location}</span>
-                </div>
-
-                {/* Job Type & Experience */}
-                <div className="flex flex-wrap gap-2 justify-center mb-4">
-                  <div className="inline-flex items-center gap-1 bg-purple-500/20 border border-purple-500/30 rounded-full px-2 py-1">
-                    <Briefcase size={12} className="text-purple-300" />
-                    <span className="text-purple-200 text-xs font-medium capitalize">
-                      {job.job_type?.replace('-', ' ')}
-                    </span>
-                  </div>
-                  <div className="inline-flex items-center gap-1 bg-orange-500/20 border border-orange-500/30 rounded-full px-2 py-1">
-                    <Clock size={12} className="text-orange-300" />
-                    <span className="text-orange-200 text-xs font-medium capitalize">
-                      {job.experience_level}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Remote Work Badge */}
-                {job.remote_work && (
-                  <div className="text-center mb-4">
-                    <div className="inline-flex items-center gap-1 bg-green-500/20 border border-green-500/30 rounded-full px-2 py-1">
-                      <span className="text-green-300 text-xs font-medium">🌐 Remote</span>
-                    </div>
-                  </div>
-                )}
-
-                {/* Salary Information */}
-                {(job.salary_min || job.salary_max) && (
-                  <div className="text-center mb-4">
-                    <div className="inline-flex items-center gap-2 bg-emerald-500/20 border border-emerald-500/30 rounded-full px-3 py-1.5">
-                      <span className="text-emerald-200 text-xs font-medium">
-                        {job.salary_min && job.salary_max 
-                          ? `$${(job.salary_min / 1000).toFixed(0)}k - $${(job.salary_max / 1000).toFixed(0)}k`
-                          : job.salary_min 
-                            ? `$${(job.salary_min / 1000).toFixed(0)}k+`
-                            : `Up to $${(job.salary_max / 1000).toFixed(0)}k`
-                        }
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {/* View Details Button */}
-                <div className="text-center">
-                  <Link to="/jobs">
-                    <Button 
-                      variant="secondary" 
-                      className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium py-2.5 transition-all duration-300 text-sm shadow-lg hover:shadow-blue-500/25"
-                    >
-                      View Details
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
+            <LandingJobCard
+              key={job.id}
+              job={job}
+              isRecruiter={isRecruiter}
+            />
           ))}
         </div>
       </section>
 
       {/* FAQ Section */}
-      <section className="relative px-4">
+      <section className="relative px-4 z-10">
         <div className="absolute inset-0 -z-10">
           <div className="absolute top-1/2 left-0 w-32 h-32 bg-green-500/5 rounded-full blur-3xl"></div>
           <div className="absolute top-1/2 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
@@ -445,7 +370,7 @@ const LandingPage = () => {
       </section>
       
       {/* Footer */}
-      <footer className="bg-gradient-to-r from-black/40 via-black/30 to-black/40 backdrop-blur-md border-t border-white/20 mt-16">
+      <footer className="bg-gradient-to-r from-black/40 via-black/30 to-black/40 backdrop-blur-md border-t border-white/20 mt-16 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 sm:gap-8">
             {/* Company Info */}
@@ -458,7 +383,7 @@ const LandingPage = () => {
                 />
                 <div>
                   <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
-                    CARRERFLOW
+                    CareerFlow
                   </h3>
                   <p className="text-xs text-gray-400">WHERE CAREERS FLOW FORWARD</p>
                 </div>

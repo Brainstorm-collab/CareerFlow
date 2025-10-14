@@ -1,52 +1,43 @@
-import JobCard from "@/components/job-card";
-import { useUser } from "@clerk/clerk-react";
-import { useEffect, useState } from "react";
+import LandingJobCard from "@/components/landing-job-card";
+import { useAuth } from "@/context/AuthContext";
 import { Bookmark } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { useJobContext } from "@/context/JobContext";
+import { useGetSavedJobs } from "@/api/apiSavedJobs";
+import { useGetUser } from "@/api/apiUsers";
+import { LandingJobCardShimmer } from "@/components/ui/job-card-shimmer";
 
 const SavedJobs = () => {
-  const { isLoaded, user } = useUser();
-  const [savedJobs, setSavedJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const { getSavedJobsData } = useJobContext();
+  const { isLoading, user } = useAuth();
+  const databaseUser = useGetUser(user?.id);
+  
+  // Use Convex hook to get saved jobs
+  const savedJobsData = useGetSavedJobs(user?.id);
+  
+  // Check if user is a recruiter
+  const isRecruiter = databaseUser?.role === "recruiter";
+  
+  // Loading state
+  const loading = savedJobsData === undefined;
+  
+  // Extract jobs from saved jobs data
+  const savedJobs = savedJobsData?.map(savedJob => savedJob.job).filter(Boolean) || [];
 
-  // Fetch saved jobs from context
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!isLoaded || !user) return;
-      
-      setLoading(true);
-      try {
-        // Get saved jobs from context
-        const savedJobsData = getSavedJobsData();
-        setSavedJobs(savedJobsData);
-      } catch (error) {
-        console.error('Error fetching saved jobs:', error);
-        setSavedJobs([]);
-      } finally {
-        setLoading(false);
-      }
-    };
 
-    fetchData();
-  }, [isLoaded, user, getSavedJobsData]);
-
-  const handleJobAction = () => {
-    // Refresh saved jobs when a job is saved/unsaved
-    if (user) {
-      const savedJobsData = getSavedJobsData();
-      setSavedJobs(savedJobsData);
-    }
-  };
-
-  if (!isLoaded || loading) {
+  if (loading) {
     return (
       <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="text-white mt-4 text-lg">Loading your saved jobs...</p>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-white text-lg">Loading your saved jobs...</p>
+            <p className="text-gray-400 text-sm">Finding your bookmarked opportunities</p>
+          </div>
+          
+          {/* Shimmer preview */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <LandingJobCardShimmer key={i} />
+            ))}
           </div>
         </div>
       </main>
@@ -114,13 +105,12 @@ const SavedJobs = () => {
             </a>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-8">
             {savedJobs.map((job) => (
-              <JobCard
-                key={job.id}
+              <LandingJobCard
+                key={job._id}
                 job={job}
-                savedInit={true}
-                onJobAction={handleJobAction}
+                isRecruiter={isRecruiter}
               />
             ))}
           </div>

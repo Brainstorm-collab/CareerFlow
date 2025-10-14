@@ -1,102 +1,87 @@
-import supabaseClient, { supabaseUrl } from "@/utils/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
-// - Apply to job ( candidate )
-export async function applyToJob(token, _, jobData) {
-  const supabase = await supabaseClient(token);
+// Hook to get applications by candidate
+export const useGetApplicationsByCandidate = (socialId) => {
+  return useQuery(api.applications.getApplicationsByUser, socialId ? { socialId } : "skip");
+};
 
-  const random = Math.floor(Math.random() * 90000);
-  const fileName = `resume-${random}-${jobData.candidate_id}`;
+// Hook to get applications by job
+export const useGetApplicationsByJob = (jobId) => {
+  return useQuery(api.applications.getApplicationsByJob, jobId && jobId !== "undefined" ? { jobId } : "skip");
+};
 
-  // First, upload the resume
-  const { error: storageError } = await supabase.storage
-    .from("resumes")
-    .upload(fileName, jobData.resume);
+// Hook to get a single application (not implemented yet)
+export const useGetApplication = (applicationId) => {
+  return null; // Function not implemented in Convex yet
+};
 
-  if (storageError) throw new Error("Error uploading Resume");
+// Hook to create an application
+export const useCreateApplication = () => {
+  return useMutation(api.applications.createApplication);
+};
 
-  const resume = `${supabaseUrl}/storage/v1/object/public/resumes/${fileName}`;
+// Hook to apply to a job (use createApplication instead)
+export const useApplyToJob = () => {
+  return useMutation(api.applications.createApplication);
+};
 
-  // Insert the application
-  const { data: applicationData, error: applicationError } = await supabase
-    .from("applications")
-    .insert([
-      {
-        ...jobData,
-        resume,
-      },
-    ])
-    .select();
+// Hook to update application status
+export const useUpdateApplicationStatus = () => {
+  return useMutation(api.applications.updateApplicationStatus);
+};
 
-  if (applicationError) {
-    console.error(applicationError);
-    throw new Error("Error submitting Application");
-  }
+// Hook to withdraw/delete an application
+export const useWithdrawApplication = () => {
+  return useMutation(api.applications.withdrawApplication);
+};
 
-  // Update the job's application count (increment by 1)
-  try {
-    // First check if the application_count column exists
-    const { data: columnCheck, error: columnError } = await supabase
-      .from('jobs')
-      .select('application_count')
-      .eq('id', jobData.job_id)
-      .limit(1);
+export const useCleanupInvalidApplications = () => {
+  return useMutation(api.applications.cleanupInvalidApplications);
+};
 
-    if (columnError) {
-      console.warn("Warning: Could not check application_count column:", columnError);
-    } else if (columnCheck && columnCheck.length > 0) {
-      // Column exists, try to increment it
-      const currentCount = columnCheck[0].application_count || 0;
-      const { error: updateError } = await supabase
-        .from("jobs")
-        .update({ 
-          application_count: currentCount + 1,
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", jobData.job_id);
+// Hook to create real jobs for testing
+export const useCreateRealJobs = () => {
+  return useMutation(api.seedData.createRealJobs);
+};
 
-      if (updateError) {
-        console.warn("Warning: Could not update job application count:", updateError);
-      } else {
-        console.log("Successfully updated application count to:", currentCount + 1);
-      }
-    } else {
-      console.log("application_count column doesn't exist, skipping count update");
-    }
-  } catch (countError) {
-    console.warn("Warning: Could not update job application count:", countError);
-  }
+// Hook to delete an application (use useWithdrawApplication instead)
+export const useDeleteApplication = () => {
+  return useMutation(api.applications.withdrawApplication);
+};
 
-  return applicationData;
+// Legacy API functions for backward compatibility
+export async function createApplication(token, applicationData) {
+  console.log('createApplication called - use useCreateApplication hook instead');
+  return { success: false };
 }
 
-// - Edit Application Status ( recruiter )
-export async function updateApplicationStatus(token, { job_id }, status) {
-  const supabase = await supabaseClient(token);
-  const { data, error } = await supabase
-    .from("applications")
-    .update({ status })
-    .eq("job_id", job_id)
-    .select();
-
-  if (error || data.length === 0) {
-    console.error("Error Updating Application Status:", error);
-    return null;
-  }
-
-  return data;
+export async function applyToJob(token, applicationData) {
+  console.log('applyToJob called - use useApplyToJob hook instead');
+  return { success: false };
 }
 
-export async function getApplications(token, { user_id }) {
-  const supabase = await supabaseClient(token);
-  const { data, error } = await supabase
-    .from("applications")
-    .select("*, job:jobs(title, company:companies(name))")
-    .eq("candidate_id", user_id);
+export async function getJobApplications(token, jobId) {
+  console.log('getJobApplications called - use useGetApplicationsByJob hook instead');
+  return [];
+}
 
-  if (error) {
-    console.error("Error fetching Applications:", error);
-    return null;
-  }
+export async function getApplications(token, jobId) {
+  console.log('getApplications called - use useGetApplicationsByJob hook instead');
+  return [];
+}
 
-  return data;
+export async function getMyApplications(token) {
+  console.log('getMyApplications called - use useGetApplicationsByCandidate hook instead');
+  return [];
+}
+
+export async function updateApplicationStatus(token, applicationId, status) {
+  console.log('updateApplicationStatus called - use useUpdateApplicationStatus hook instead');
+  return { success: false };
+}
+
+export async function uploadResume(token, file, userId) {
+  console.log('uploadResume called - use useGenerateUploadUrl hook instead');
+  return { success: false, url: null };
 }

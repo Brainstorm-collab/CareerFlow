@@ -20,6 +20,7 @@ import useFetch from "@/hooks/use-fetch";
 import { applyToJob } from "@/api/apiApplication";
 import { BarLoader } from "react-spinners";
 import { useJobContext } from "@/context/JobContext";
+import { useToast } from "@/context/ToastContext";
 
 const schema = z.object({
   experience: z
@@ -52,6 +53,7 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
     resolver: zodResolver(schema),
   });
   const { applyToJob: applyToJobContext } = useJobContext();
+  const { showSuccess, showError } = useToast();
 
   const {
     loading: loadingApply,
@@ -61,24 +63,41 @@ export function ApplyJobDrawer({ user, job, fetchJob, applied = false }) {
 
   const onSubmit = (data) => {
     console.log('Submitting application for job:', job.id);
+    console.log('User data:', user);
+    console.log('Form data:', data);
     
     // Apply to job in context for instant UI update with full job data
     applyToJobContext(job.id, job);
     
+    // Show immediate success toast for better UX
+    showSuccess(
+      `Successfully applied to "${job.title}" at ${job.company?.name || (typeof job.company === 'string' ? job.company : 'Company')}! Your application has been submitted and is under review.`,
+      6000
+    );
+    
+    // Try to submit to Supabase
     fnApply({
       ...data,
       job_id: job.id,
       candidate_id: user.id,
-      name: user.fullName,
+      name: user.fullName || user.firstName + ' ' + user.lastName,
       status: "applied",
       resume: data.resume[0],
     }).then((result) => {
-      console.log('Application submitted successfully:', result);
+      console.log('Application submitted successfully to Supabase:', result);
+      
       // Refresh job data to get updated application count
       fetchJob();
       reset();
     }).catch((error) => {
-      console.error('Error applying to job:', error);
+      console.error('Error applying to job in Supabase:', error);
+      
+      // Show additional error toast if Supabase fails
+      showError(
+        `Application saved locally but failed to sync with server. Please check your connection and try again.`,
+        5000
+      );
+      
       // Still refresh to show any partial updates
       fetchJob();
     });

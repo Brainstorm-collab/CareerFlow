@@ -3,32 +3,45 @@ import { Users, Target, Award, Globe, Star, Zap, Shield, Heart } from "lucide-re
 
 const AboutPage = () => {
   return (
-    <main className="min-h-screen py-6 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
-      {/* Hero Section */}
-      <section className="text-center mb-12 sm:mb-16 px-4 relative">
-        {/* Background Elements */}
-        <div className="absolute inset-0 -z-10">
-          <div className="absolute top-20 left-20 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute top-40 right-20 w-40 h-40 bg-purple-500/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 left-1/2 w-24 h-24 bg-green-500/10 rounded-full blur-3xl"></div>
-        </div>
+    <main className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 px-4 sm:px-6 lg:px-8 overflow-x-hidden">
+      {/* Background Effects */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Grid Pattern */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:50px_50px]"></div>
         
-        {/* Logo with Enhanced Styling */}
-        <div className="flex justify-center mb-8">
-          <div className="relative group">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-green-500/20 rounded-full blur-2xl group-hover:blur-3xl transition-all duration-500"></div>
-            <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm rounded-3xl p-6 border border-white/20 group-hover:border-white/30 transition-all duration-300">
-              <img 
-                src="/newlogo.png" 
-                alt="CareerFlow Logo" 
-                className="w-32 h-32 sm:w-40 sm:h-40 lg:w-48 lg:h-48 object-contain drop-shadow-2xl"
-              />
+        {/* Floating Blur Effects */}
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-green-500/5 rounded-full blur-3xl"></div>
+      </div>
+      {/* Header Section */}
+      <div className="relative z-10 max-w-6xl mx-auto">
+        <div className="text-center">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500/20 to-purple-600/20 flex items-center justify-center">
+              <Heart size={24} className="text-blue-400" />
             </div>
+            <h1 className="text-3xl font-bold text-white">About Us</h1>
           </div>
+          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
+            Learn more about CareerFlow and our mission to revolutionize the job search experience
+          </p>
+        </div>
+      </div>
+
+      {/* Hero Section */}
+      <section className="text-center relative">
+        {/* Logo - Raw Image */}
+        <div className="flex justify-center">
+          <img 
+            src="/newlogo.png" 
+            alt="CareerFlow Logo" 
+            className="w-40 h-40 sm:w-48 sm:h-48 lg:w-56 lg:h-56 xl:w-64 xl:h-64 object-contain"
+          />
         </div>
         
-        <h1 className="gradient-title font-black text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight mb-6 sm:mb-8">
-          About CARRERFLOW
+        <h1 className="font-black text-4xl sm:text-5xl lg:text-6xl xl:text-7xl tracking-tight leading-none px-2 break-words bg-gradient-to-r from-blue-400 via-purple-500 to-green-400 bg-clip-text text-transparent">
+          About CareerFlow
         </h1>
         <p className="text-gray-300 text-lg sm:text-xl lg:text-2xl max-w-3xl lg:max-w-4xl mx-auto leading-relaxed font-medium">
           Connecting talented professionals with amazing opportunities worldwide. 
@@ -140,7 +153,7 @@ const AboutPage = () => {
       <section className="max-w-6xl mx-auto mb-12 sm:mb-16 px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
-            Why Choose CARRERFLOW?
+            Why Choose CareerFlow?
           </h2>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
             Built with cutting-edge technology and user experience in mind
@@ -222,7 +235,7 @@ const AboutPage = () => {
         <Card className="bg-gradient-to-br from-black/20 via-black/15 to-black/20 backdrop-blur-sm border border-white/10 hover:border-blue-500/30 transition-all duration-300">
           <CardHeader className="pb-6">
             <CardTitle className="text-3xl font-bold text-white mb-2">About the Creator</CardTitle>
-            <p className="text-gray-400 text-lg">The mind behind CARRERFLOW</p>
+            <p className="text-gray-400 text-lg">The mind behind CareerFlow</p>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col items-center gap-8">
@@ -235,13 +248,13 @@ const AboutPage = () => {
               <div className="space-y-6">
                 <h3 className="text-2xl font-bold text-white">G.Eesaan</h3>
                 <p className="text-gray-300 leading-relaxed max-w-2xl text-lg">
-                  Hi! I'm G.Eesaan, the creator and developer behind CARRERFLOW. I'm passionate about 
+                  Hi! I'm G.Eesaan, the creator and developer behind CareerFlow. I'm passionate about 
                   building innovative solutions that connect people with opportunities. This platform 
                   represents my vision of creating a seamless, user-friendly job portal that empowers 
                   both job seekers and employers.
                 </p>
                 <p className="text-gray-300 leading-relaxed max-w-2xl text-lg">
-                  With a focus on modern web technologies and user experience, I've developed CARRERFLOW 
+                  With a focus on modern web technologies and user experience, I've developed CareerFlow 
                   to be more than just a job board - it's a comprehensive career development platform 
                   that helps careers flow forward.
                 </p>
@@ -253,6 +266,25 @@ const AboutPage = () => {
             </div>
           </CardContent>
         </Card>
+      </section>
+
+      {/* Footer Section */}
+      <section className="max-w-4xl mx-auto text-center px-4 mb-16">
+        <div className="bg-gradient-to-br from-black/20 via-black/15 to-black/20 backdrop-blur-sm border border-white/10 rounded-2xl p-8">
+          <div className="flex items-center justify-center gap-3 mb-6">
+            <Heart size={24} className="text-red-400" />
+            <h3 className="text-2xl font-bold text-white">Made with Love</h3>
+          </div>
+          <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mx-auto">
+            CareerFlow is built with passion, dedication, and a vision to make job searching 
+            more accessible and efficient for everyone. Thank you for being part of our journey.
+          </p>
+          <div className="mt-8 flex items-center justify-center gap-2 text-blue-400 font-semibold">
+            <span>Made with</span>
+            <Heart size={20} className="text-red-400" />
+            <span>by G.Eesaan</span>
+          </div>
+        </div>
       </section>
     </main>
   );
