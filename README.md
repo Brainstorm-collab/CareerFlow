@@ -451,12 +451,6 @@ We welcome contributions! Please follow these steps:
 
 ---
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
 ## 📞 Support
 
 - **Email**: hello@careerflow.com
@@ -466,6 +460,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  <p>Made with ❤️ by the CareerFlow Team</p>
+  <p>Made with ❤️ by the G.Eesaan</p>
   <p>© 2025 CareerFlow. All rights reserved.</p>
 </div>
