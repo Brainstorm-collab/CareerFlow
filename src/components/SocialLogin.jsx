@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -55,6 +55,35 @@ export const SocialLogin = ({
   const baseUrl = import.meta.env.VITE_BASE_URL || window.location.origin;
   const googleCallbackUrl = `${baseUrl}/auth/google/callback`;
   const facebookCallbackUrl = `${baseUrl}/auth/facebook/callback`;
+
+  // Compute a valid numeric width for Google button (GIS requires 120-400 px)
+  const containerRef = useRef(null);
+  const [googleButtonWidth, setGoogleButtonWidth] = useState(0);
+
+  useEffect(() => {
+    if (!googleClientId) {
+      console.error('[SocialLogin] Missing VITE_GOOGLE_CLIENT_ID. Set it in cf/.env.local and add your origin to Authorized JavaScript origins in Google Cloud Console.');
+    }
+    if (import.meta.env.DEV) {
+      try {
+        console.log('[SocialLogin] Using Google clientId:', googleClientId, 'origin:', window.location.origin);
+      } catch {}
+    }
+  }, [googleClientId]);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      if (!containerRef.current) return;
+      const containerWidth = Math.floor(containerRef.current.offsetWidth || 0);
+      // Clamp to Google's allowed range
+      const clamped = Math.max(120, Math.min(400, containerWidth));
+      setGoogleButtonWidth(clamped);
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
   
   // Handle Google Login Success
   const handleGoogleSuccess = async (response) => {
@@ -240,13 +269,14 @@ export const SocialLogin = ({
         <div 
           className="google-button-container"
           style={{ opacity: disabled ? 0.5 : 1, pointerEvents: disabled ? 'none' : 'auto' }}
+          ref={containerRef}
         >
           <GoogleLogin
             onSuccess={disabled ? () => {} : handleGoogleSuccess}
             onError={disabled ? () => {} : handleGoogleError}
             theme="outline"
             size="large"
-            width="100%"
+            width={googleButtonWidth || undefined}
             text="signin_with"
             shape="rectangular"
             useOneTap={false}

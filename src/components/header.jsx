@@ -15,9 +15,11 @@ const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [search, setSearch] = useSearchParams();
-  const { user, isSignedIn, signOut } = useAuth();
+  const { user, isSignedIn, signOut, emailLogin } = useAuth();
   const databaseUser = useGetUser(user?.id);
   const dropdownRef = useRef(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
 
   // Debug user data
   useEffect(() => {
@@ -830,6 +832,8 @@ const Header = () => {
                     type="email"
                     placeholder="Enter your email"
                     className="w-full pl-8 pr-3 py-2 bg-white/10 text-white placeholder:text-gray-400 border border-white/20 rounded-md focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
                   />
                   <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
@@ -845,16 +849,12 @@ const Header = () => {
                     type="password"
                     placeholder="Enter your password"
                     className="w-full pl-8 pr-8 py-2 bg-white/10 text-white placeholder:text-gray-400 border border-white/20 rounded-md focus:border-blue-500 focus:outline-none transition-colors text-sm"
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                   />
                   <svg className="absolute left-2.5 top-1/2 transform -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  <button className="absolute right-2.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300 transition-colors">
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </button>
                 </div>
               </div>
 
@@ -872,7 +872,26 @@ const Header = () => {
               </div>
 
               {/* Sign In Button */}
-              <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 rounded-md transition-all duration-200 shadow-lg hover:shadow-xl text-sm">
+              <button
+                onClick={async () => {
+                  const result = await emailLogin(loginEmail, loginPassword);
+                  if (result?.success) {
+                    setShowSignIn(false);
+                    const userRole = result.user?.role;
+                    if (userRole === 'candidate') {
+                      navigate('/jobs');
+                    } else if (userRole === 'recruiter') {
+                      navigate('/post-job');
+                    } else {
+                      navigate('/onboarding');
+                    }
+                  } else {
+                    // simple inline feedback
+                    alert(result?.error || 'Invalid email or password');
+                  }
+                }}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium py-2 rounded-md transition-all duration-200 shadow-lg hover:shadow-xl text-sm"
+              >
                 Sign In
               </button>
             </div>

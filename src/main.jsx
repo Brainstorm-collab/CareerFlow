@@ -4,8 +4,19 @@ import App from "./App.jsx";
 import "./index.css";
 import { registerServiceWorker } from './utils/service-worker.js';
 
-// Register service worker for offline support and caching
-registerServiceWorker();
+// Register SW only in production; in dev, ensure any old SW/caches are cleared
+if (import.meta.env.PROD) {
+  // Register service worker for offline support and caching
+  registerServiceWorker();
+} else if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  // Dev: proactively unregister existing service workers and clear caches to avoid stale assets
+  navigator.serviceWorker.getRegistrations?.().then((registrations) => {
+    registrations.forEach((registration) => registration.unregister());
+  });
+  if ('caches' in window) {
+    caches.keys().then((names) => names.forEach((name) => caches.delete(name)));
+  }
+}
 
 // Debug: Log environment variables
 console.log('Environment check:', {

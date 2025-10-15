@@ -161,30 +161,22 @@ export const getApplicationsByUser = query({
     // Get job details, company information, and file information for each application
     const applicationsWithJobs = await Promise.all(
       applications.map(async (app) => {
-        // Migrate old applications to include user profile data if missing
-        if (!app.fullName || !app.email || !app.phone || !app.location || !app.skills) {
-          console.log('🔄 Migrating application data for app:', app._id);
-          try {
-            await ctx.db.patch(app._id, {
-              fullName: app.fullName || user.firstName + ' ' + user.lastName,
-              email: app.email || user.email,
-              phone: app.phone || user.phone,
-              location: app.location || user.location,
-              experienceYears: app.experienceYears || user.experienceYears,
-              currentPosition: app.currentPosition || user.currentPosition,
-              currentCompany: app.currentCompany || user.currentCompany,
-              skills: app.skills || user.skills || [],
-              education: app.education || user.education,
-              availability: app.availability || user.availability,
-              expectedSalary: app.expectedSalary || user.expectedSalary,
-              noticePeriod: app.noticePeriod || user.noticePeriod,
-              updatedAt: Date.now()
-            });
-            console.log('✅ Application migrated successfully');
-          } catch (migrationError) {
-            console.error('❌ Error migrating application:', migrationError);
-          }
-        }
+        // In queries we cannot write; merge missing fields in-memory for the response
+        const mergedApp = {
+          ...app,
+          fullName: app.fullName || (user.firstName + ' ' + user.lastName),
+          email: app.email || user.email,
+          phone: app.phone || user.phone,
+          location: app.location || user.location,
+          experienceYears: app.experienceYears || user.experienceYears,
+          currentPosition: app.currentPosition || user.currentPosition,
+          currentCompany: app.currentCompany || user.currentCompany,
+          skills: app.skills || user.skills || [],
+          education: app.education || user.education,
+          availability: app.availability || user.availability,
+          expectedSalary: app.expectedSalary || user.expectedSalary,
+          noticePeriod: app.noticePeriod || user.noticePeriod,
+        };
         let job = null;
         let company = null;
         let resumeFile = null;
@@ -264,9 +256,9 @@ export const getApplicationsByUser = query({
         }
         
         // If application has resumeUrl that starts with "file:", fetch the file details
-        if (app.resumeUrl && app.resumeUrl.startsWith('file:')) {
+        if (mergedApp.resumeUrl && mergedApp.resumeUrl.startsWith('file:')) {
           try {
-            const fileId = app.resumeUrl.replace('file:', '');
+            const fileId = mergedApp.resumeUrl.replace('file:', '');
             // Validate file ID length before fetching
             if (fileId.length === 27 || fileId.length === 32) {
               resumeFile = await ctx.db.get(fileId as any);
@@ -274,13 +266,13 @@ export const getApplicationsByUser = query({
               console.log('⚠️ Invalid file ID length:', fileId.length, 'for ID:', fileId);
             }
           } catch (fileError) {
-            console.log('⚠️ Could not fetch resume file:', app.resumeUrl, fileError);
+            console.log('⚠️ Could not fetch resume file:', mergedApp.resumeUrl, fileError);
             resumeFile = null;
           }
         }
         
         return {
-          ...app,
+          ...mergedApp,
           job: job ? {
             ...job,
             company: company
@@ -313,37 +305,30 @@ export const getApplicationsByJob = query({
         // console.log('🔍 Found candidate:', candidate?.fullName);
 
         // Migrate old applications to include user profile data if missing
-        if (candidate && (!application.fullName || !application.email || !application.phone || !application.location || !application.skills)) {
-          console.log('🔄 Migrating application data for app:', application._id);
-          try {
-            await ctx.db.patch(application._id, {
-              fullName: application.fullName || candidate.firstName + ' ' + candidate.lastName,
-              email: application.email || candidate.email,
-              phone: application.phone || candidate.phone,
-              location: application.location || candidate.location,
-              experienceYears: application.experienceYears || candidate.experienceYears,
-              currentPosition: application.currentPosition || candidate.currentPosition,
-              currentCompany: application.currentCompany || candidate.currentCompany,
-              skills: application.skills || candidate.skills || [],
-              education: application.education || candidate.education,
-              availability: application.availability || candidate.availability,
-              expectedSalary: application.expectedSalary || candidate.expectedSalary,
-              noticePeriod: application.noticePeriod || candidate.noticePeriod,
-              updatedAt: Date.now()
-            });
-            console.log('✅ Application migrated successfully');
-          } catch (migrationError) {
-            console.error('❌ Error migrating application:', migrationError);
-          }
-        }
+        // Queries cannot write; prepare a merged copy for response instead of patching
+        const merged = candidate ? {
+          ...application,
+          fullName: application.fullName || (candidate.firstName + ' ' + candidate.lastName),
+          email: application.email || candidate.email,
+          phone: application.phone || candidate.phone,
+          location: application.location || candidate.location,
+          experienceYears: application.experienceYears || candidate.experienceYears,
+          currentPosition: application.currentPosition || candidate.currentPosition,
+          currentCompany: application.currentCompany || candidate.currentCompany,
+          skills: application.skills || candidate.skills || [],
+          education: application.education || candidate.education,
+          availability: application.availability || candidate.availability,
+          expectedSalary: application.expectedSalary || candidate.expectedSalary,
+          noticePeriod: application.noticePeriod || candidate.noticePeriod,
+        } : application;
 
         // Get resume file details if available
         let resumeFile = null;
-        if (application.resumeUrl) {
+        if (merged.resumeUrl) {
           try {
             // Check if it's a file: reference or direct URL
-            if (application.resumeUrl.startsWith('file:')) {
-              const fileId = application.resumeUrl.replace('file:', '');
+            if (merged.resumeUrl.startsWith('file:')) {
+              const fileId = merged.resumeUrl.replace('file:', '');
               // Validate that it's a proper Convex ID (should be 27 or 32 characters)
               if (fileId.length === 27 || fileId.length === 32) {
                 resumeFile = await ctx.db.get(fileId as any);
@@ -361,7 +346,7 @@ export const getApplicationsByJob = query({
             } else {
               // If it's a direct URL, create a mock file object
               resumeFile = {
-                fileUrl: application.resumeUrl,
+                fileUrl: merged.resumeUrl,
                 fileName: 'resume.pdf',
                 fileType: 'application/pdf',
                 fileSize: 0
@@ -381,7 +366,7 @@ export const getApplicationsByJob = query({
         }
 
         return {
-          ...application,
+          ...merged,
           candidate,
           resumeFile,
         };
