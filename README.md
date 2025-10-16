@@ -1,4 +1,5 @@
-# 🚀 CareerFlow - Where Careers Flow Forward
+# 🚀 CareerFlow - Serverless ATS‑lite for Job Search and Recruiting
+
 
 <div align="center">
   <img src="public/CareerFlow demo img.png" alt="CareerFlow Demo" width="100%" style="border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">
